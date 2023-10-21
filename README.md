@@ -1,11 +1,11 @@
-![GitHub Repo stars](https://img.shields.io/github/stars/skanehira/go-cli-template?style=social)
-![GitHub](https://img.shields.io/github/license/skanehira/go-cli-template)
-![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/skanehira/go-cli-template)
-![GitHub all releases](https://img.shields.io/github/downloads/skanehira/go-cli-template/total)
-![GitHub CI Status](https://img.shields.io/github/actions/workflow/status/skanehira/go-cli-template/ci.yaml?branch=main)
-![GitHub Release Status](https://img.shields.io/github/actions/workflow/status/skanehira/go-cli-template/release.yaml?branch=main)
+![GitHub Repo stars](https://img.shields.io/github/stars/kyoshidajp/dep-doctor?style=social)
+![GitHub](https://img.shields.io/github/license/kyoshidajp/dep-doctor)
+![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/kyoshidajp/dep-doctor)
+![GitHub all releases](https://img.shields.io/github/downloads/kyoshidajp/dep-doctor/total)
+![GitHub CI Status](https://img.shields.io/github/actions/workflow/status/kyoshidajp/dep-doctor/ci.yaml?branch=main)
+![GitHub Release Status](https://img.shields.io/github/actions/workflow/status/kyoshidajp/dep-doctor/release.yaml?branch=main)
 
-# go-cli-template
+# dep-doctor
 This template is help you to quick implement some CLI using Go.
 
 This repository is contains bellow.
@@ -19,9 +19,6 @@ This repository is contains bellow.
   - CodeQL Analysis (Go)
 
 ## How to use
-1. fork this repository
-2. replace `skanehira` to your user name using `sed`(or others)
-3. run `make init`
 
 ## Author
-skanehira
+Katsuhiko YOSHIDA

@@ -1,4 +1,4 @@
-module github.com/skanehira/go-cli-template
+module github.com/kyoshidajp/dep-doctor
 
 go 1.20
 
