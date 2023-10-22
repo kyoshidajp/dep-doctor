@@ -12,7 +12,7 @@ import (
 	"github.com/kyoshidajp/dep-doctor/cmd/github"
 )
 
-const GITHUB_SEARCH_REPO_COUNT_PER_ONCE = 10
+const GITHUB_SEARCH_REPO_COUNT_PER_ONCE = 20
 
 type Diagnosis struct {
 	Name      string
