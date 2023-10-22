@@ -2,8 +2,8 @@ package github
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"log"
 	net_url "net/url"
 	"strings"
 
@@ -20,12 +20,12 @@ type GitHubRepository struct {
 func ParseGitHubUrl(url string) (GitHubRepository, error) {
 	u, err := net_url.Parse(url)
 	if err != nil {
-		log.Fatal(err)
+		return GitHubRepository{}, errors.New("error: Unknown URL")
 	}
 
 	paths := strings.Split(u.Path, "/")
 	if len(paths) < 3 {
-		return GitHubRepository{}, fmt.Errorf("error: Unknown URL")
+		return GitHubRepository{}, errors.New("error: Unknown URL")
 	}
 	return GitHubRepository{
 		Owner: paths[1],

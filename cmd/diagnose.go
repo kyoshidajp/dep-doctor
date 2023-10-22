@@ -14,8 +14,11 @@ var diagnoseCmd = &cobra.Command{
 		f, _ := os.Open(args[0])
 		defer f.Close()
 
-		r := bundler.Diagnose(f)
-		println(r)
+		diagnoses := bundler.Diagnose(f)
+		err := bundler.Report(diagnoses)
+		if err != nil {
+			os.Exit(1)
+		}
 	},
 }
 

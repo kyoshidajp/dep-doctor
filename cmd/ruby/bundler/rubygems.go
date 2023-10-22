@@ -21,7 +21,6 @@ func FetchFromRubyGems(name string) string {
 
 	var Gem GemResponse
 	json.Unmarshal(body, &Gem)
-	fmt.Printf("%-v", Gem)
 
 	return Gem.SourceCodeUri
 }

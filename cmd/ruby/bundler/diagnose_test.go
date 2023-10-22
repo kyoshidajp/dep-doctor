@@ -31,3 +31,40 @@ func TestDiagnose(t *testing.T) {
 		})
 	}
 }
+
+func ExampleReport() {
+	tests := []struct {
+		name      string
+		diagnoses []bundler.Diagnosis
+	}{
+		{
+			name: "normal",
+			diagnoses: []bundler.Diagnosis{
+				{
+					Name:      "rails",
+					Url:       "https://github.com/rails/rails",
+					Archived:  false,
+					Diagnosed: true,
+				},
+				{
+					Name:      "paperclip",
+					Url:       "https://github.com/thoughtbot/paperclip",
+					Archived:  true,
+					Diagnosed: true,
+				},
+				{
+					Name:      "dotenv",
+					Url:       "",
+					Archived:  false,
+					Diagnosed: false,
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		bundler.Report(tt.diagnoses)
+		// Output:
+		// aaa
+	}
+}
