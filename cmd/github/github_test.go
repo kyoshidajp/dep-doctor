@@ -28,25 +28,27 @@ func TestParseGitHubUrl(t *testing.T) {
 
 func TestFetchFromGitHub(t *testing.T) {
 	tests := []struct {
-		name  string
-		owner string
-		repo  string
+		name           string
+		nameWithOwners []NameWithOwner
 	}{
 		{
-			name:  "active repository",
-			owner: "rails",
-			repo:  "rails",
-		},
-		{
-			name:  "archived repository",
-			owner: "rails",
-			repo:  "strong_parameters",
+			name: "active repository",
+			nameWithOwners: []NameWithOwner{
+				{
+					Owner: "rails",
+					Repo:  "rails",
+				},
+				{
+					Owner: "rails",
+					Repo:  "strong_parameters",
+				},
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := FetchFromGitHub(tt.owner, tt.repo)
+			r := FetchFromGitHub(tt.nameWithOwners)
 			assert.Equal(t, "test", r)
 		})
 	}

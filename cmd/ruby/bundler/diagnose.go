@@ -29,31 +29,34 @@ func Diagnose(r io.ReadSeekerAt) []Diagnosis {
 
 		githubUrl := FetchFromRubyGems(lib.Name)
 		repo, err := github.ParseGitHubUrl(githubUrl)
-		var (
-			url       string
-			archived  bool
-			diagnosed bool
-		)
+		nameWithOwners := []github.NameWithOwner{
+			{
+				Repo:  repo.Repo,
+				Owner: repo.Owner,
+			},
+		}
+
 		if err != nil {
-			url = ""
-			archived = false
-			diagnosed = false
+			diagnosis := Diagnosis{
+				Name:      lib.Name,
+				Url:       "",
+				Archived:  false,
+				Diagnosed: false,
+			}
+			diagnoses = append(diagnoses, diagnosis)
 		} else {
-			repo2 := github.FetchFromGitHub(repo.Owner, repo.Repo)
-			url = githubUrl
-			archived = repo2.Archived
-			diagnosed = true
+			repos := github.FetchFromGitHub(nameWithOwners)
+			for _, r := range repos {
+				diagnosis := Diagnosis{
+					Name:      lib.Name,
+					Url:       githubUrl,
+					Archived:  r.Archived,
+					Diagnosed: true,
+				}
+				diagnoses = append(diagnoses, diagnosis)
+			}
 		}
-
-		diagnosis := Diagnosis{
-			Name:      lib.Name,
-			Url:       url,
-			Archived:  archived,
-			Diagnosed: diagnosed,
-		}
-		diagnoses = append(diagnoses, diagnosis)
 	}
-
 	return diagnoses
 }
 

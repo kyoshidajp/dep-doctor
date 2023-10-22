@@ -5,9 +5,11 @@ import (
 	"errors"
 	"fmt"
 	net_url "net/url"
+	"os"
 	"strings"
 
-	"github.com/google/go-github/github"
+	"github.com/shurcooL/githubv4"
+	"golang.org/x/oauth2"
 )
 
 type GitHubRepository struct {
@@ -15,6 +17,15 @@ type GitHubRepository struct {
 	Repo     string
 	Url      string
 	Archived bool
+}
+
+type NameWithOwner struct {
+	Repo  string
+	Owner string
+}
+
+func (n NameWithOwner) getName() string {
+	return fmt.Sprintf("repo:%s/%s", n.Owner, n.Repo)
 }
 
 func ParseGitHubUrl(url string) (GitHubRepository, error) {
@@ -34,16 +45,49 @@ func ParseGitHubUrl(url string) (GitHubRepository, error) {
 	}, nil
 }
 
-func FetchFromGitHub(owner string, repo string) GitHubRepository {
-	client := github.NewClient(nil)
-	repository, _, err := client.Repositories.Get(context.Background(), owner, repo)
-	if err != nil {
-		fmt.Printf("Error: %v\n", err)
+func FetchFromGitHub(nameWithOwners []NameWithOwner) []GitHubRepository {
+	src := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")},
+	)
+	httpClient := oauth2.NewClient(context.Background(), src)
+	client := githubv4.NewClient(httpClient)
+
+	var query struct {
+		Search struct {
+			RepositoryCount githubv4.Int
+			Nodes           []struct {
+				Repository struct {
+					IsArchived    githubv4.Boolean
+					NameWithOwner githubv4.String
+					IsMirror      githubv4.Boolean
+				} `graphql:"... on Repository"`
+			}
+		} `graphql:"search(query:$query, first:$count, type:REPOSITORY)"`
 	}
 
-	return GitHubRepository{
-		Owner:    owner,
-		Repo:     repo,
-		Archived: repository.GetArchived(),
+	names := make([]string, len(nameWithOwners))
+	for i, n := range nameWithOwners {
+		names[i] = n.getName()
 	}
+	q := strings.Join(names, " ")
+	variables := map[string]interface{}{
+		"query": githubv4.String(q),
+		"count": githubv4.NewInt(2),
+	}
+
+	err := client.Query(context.Background(), &query, variables)
+	if err != nil {
+		// Handle error.
+	}
+
+	repos := []GitHubRepository{}
+	for _, node := range query.Search.Nodes {
+		repos = append(repos, GitHubRepository{
+			Owner:    string(node.Repository.NameWithOwner),
+			Repo:     string(node.Repository.NameWithOwner),
+			Archived: false,
+		})
+	}
+
+	return repos
 }
