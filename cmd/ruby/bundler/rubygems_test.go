@@ -14,15 +14,33 @@ func TestFetchFromRubyGems(t *testing.T) {
 		gem_name string
 	}{
 		{
-			name:     "normal",
+			name:     "source_code_uri exists",
 			gem_name: "rails",
+		},
+		{
+			name:     "no source_code_uri, but homepage_uri exists",
+			gem_name: "minitest",
+		},
+	}
+	expects := []struct {
+		name string
+		url  string
+	}{
+		{
+			name: "source_code_uri exists",
+			url:  "https://github.com/rails/rails",
+		},
+		{
+			name: "no source_code_uri, but homepage_uri exists",
+			url:  "https://github.com/minitest/minitest",
 		},
 	}
 
-	for _, tt := range tests {
+	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := bundler.FetchFromRubyGems(tt.gem_name)
-			assert.Equal(t, true, strings.HasPrefix(r, "https://github.com/rails/rails"))
+			expect := expects[i]
+			assert.Equal(t, true, strings.HasPrefix(r, expect.url))
 		})
 	}
 }

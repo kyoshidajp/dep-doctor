@@ -13,6 +13,7 @@ const RUBYGEMS_ORG_API = "https://rubygems.org/api/v1/gems/%s.json"
 type GemResponse struct {
 	Name          string `json:"name"`
 	SourceCodeUri string `json:"source_code_uri"`
+	HomepageUri   string `json:"homepage_uri"`
 }
 
 func FetchFromRubyGems(name string) string {
@@ -25,5 +26,11 @@ func FetchFromRubyGems(name string) string {
 	var Gem GemResponse
 	json.Unmarshal(body, &Gem)
 
-	return Gem.SourceCodeUri
+	if Gem.SourceCodeUri != "" {
+		return Gem.SourceCodeUri
+	} else if Gem.HomepageUri != "" {
+		return Gem.HomepageUri
+	}
+
+	return ""
 }
