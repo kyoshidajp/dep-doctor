@@ -46,10 +46,25 @@ func TestFetchFromGitHub(t *testing.T) {
 		},
 	}
 
+	expect := []GitHubRepository{
+		{
+			Name:     "rails",
+			Repo:     "rails/rails",
+			Url:      "https://github.com/rails/rails",
+			Archived: false,
+		},
+		{
+			Name:     "strong_parameters",
+			Repo:     "rails/strong_parameters",
+			Url:      "https://github.com/rails/strong_parameters",
+			Archived: true,
+		},
+	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := FetchFromGitHub(tt.nameWithOwners)
-			assert.Equal(t, "test", r)
+			assert.Equal(t, expect, r)
 		})
 	}
 }

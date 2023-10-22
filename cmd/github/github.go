@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	net_url "net/url"
 	"os"
 	"strings"
@@ -12,7 +13,10 @@ import (
 	"golang.org/x/oauth2"
 )
 
+const QUERY_SEPARATOR = " "
+
 type GitHubRepository struct {
+	Name     string
 	Owner    string
 	Repo     string
 	Url      string
@@ -20,11 +24,13 @@ type GitHubRepository struct {
 }
 
 type NameWithOwner struct {
-	Repo  string
-	Owner string
+	PackageName string
+	Repo        string
+	Owner       string
+	CanSearch   bool
 }
 
-func (n NameWithOwner) getName() string {
+func (n NameWithOwner) GetName() string {
 	return fmt.Sprintf("repo:%s/%s", n.Owner, n.Repo)
 }
 
@@ -46,8 +52,13 @@ func ParseGitHubUrl(url string) (GitHubRepository, error) {
 }
 
 func FetchFromGitHub(nameWithOwners []NameWithOwner) []GitHubRepository {
+	token := os.Getenv("GITHUB_TOKEN")
+	if len(token) == 0 {
+		log.Fatal("env var `GITHUB_TOKEN` is not found")
+	}
+
 	src := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")},
+		&oauth2.Token{AccessToken: token},
 	)
 	httpClient := oauth2.NewClient(context.Background(), src)
 	client := githubv4.NewClient(httpClient)
@@ -60,6 +71,8 @@ func FetchFromGitHub(nameWithOwners []NameWithOwner) []GitHubRepository {
 					IsArchived    githubv4.Boolean
 					NameWithOwner githubv4.String
 					IsMirror      githubv4.Boolean
+					Url           githubv4.String
+					Name          githubv4.String
 				} `graphql:"... on Repository"`
 			}
 		} `graphql:"search(query:$query, first:$count, type:REPOSITORY)"`
@@ -67,27 +80,26 @@ func FetchFromGitHub(nameWithOwners []NameWithOwner) []GitHubRepository {
 
 	names := make([]string, len(nameWithOwners))
 	for i, n := range nameWithOwners {
-		names[i] = n.getName()
+		names[i] = n.GetName()
 	}
-	q := strings.Join(names, " ")
+	q := strings.Join(names, QUERY_SEPARATOR)
 	variables := map[string]interface{}{
 		"query": githubv4.String(q),
-		"count": githubv4.NewInt(2),
+		"count": githubv4.Int(len(names)),
 	}
 
-	err := client.Query(context.Background(), &query, variables)
-	if err != nil {
-		// Handle error.
-	}
-
+	client.Query(context.Background(), &query, variables)
 	repos := []GitHubRepository{}
 	for _, node := range query.Search.Nodes {
 		repos = append(repos, GitHubRepository{
-			Owner:    string(node.Repository.NameWithOwner),
 			Repo:     string(node.Repository.NameWithOwner),
-			Archived: false,
+			Archived: bool(node.Repository.IsArchived),
+			Url:      string(node.Repository.Url),
+			Name:     string(node.Repository.Name),
 		})
 	}
+
+	fmt.Printf("%s", strings.Repeat(".", len(repos)))
 
 	return repos
 }

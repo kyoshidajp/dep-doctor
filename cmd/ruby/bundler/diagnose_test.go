@@ -10,61 +10,51 @@ import (
 )
 
 func TestDiagnose(t *testing.T) {
-	tests := []struct {
-		name string
-		file string
-	}{
-		{
-			name: "normal",
-			file: "testdata/Gemfile.lock",
+	expect := map[string]bundler.Diagnosis{
+		"faker": {
+			Name:      "faker",
+			Url:       "https://github.com/faker-ruby/faker",
+			Archived:  false,
+			Diagnosed: true,
+		},
+		"concurrent-ruby": {
+			Name:      "concurrent-ruby",
+			Url:       "https://github.com/ruby-concurrency/concurrent-ruby",
+			Archived:  false,
+			Diagnosed: true,
+		},
+		"i18n": {
+			Name:      "i18n",
+			Url:       "https://github.com/ruby-i18n/i18n",
+			Archived:  false,
+			Diagnosed: true,
+		},
+		"method_source": {
+			Name:      "method_source",
+			Url:       "https://github.com/banister/method_source",
+			Archived:  false,
+			Diagnosed: true,
+		},
+		"paperclip": {
+			Name:      "paperclip",
+			Url:       "https://github.com/thoughtbot/paperclip",
+			Archived:  true,
+			Diagnosed: true,
+		},
+		"dotenv": {
+			Name:      "dotenv",
+			Url:       "",
+			Archived:  false,
+			Diagnosed: false,
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			f, err := os.Open(tt.file)
-			require.NoError(t, err)
-			defer f.Close()
+	t.Run("test", func(t *testing.T) {
+		f, err := os.Open("testdata/Gemfile.lock")
+		require.NoError(t, err)
+		defer f.Close()
 
-			r := bundler.Diagnose(f)
-			assert.Equal(t, "bundler", r)
-		})
-	}
-}
-
-func ExampleReport() {
-	tests := []struct {
-		name      string
-		diagnoses []bundler.Diagnosis
-	}{
-		{
-			name: "normal",
-			diagnoses: []bundler.Diagnosis{
-				{
-					Name:      "rails",
-					Url:       "https://github.com/rails/rails",
-					Archived:  false,
-					Diagnosed: true,
-				},
-				{
-					Name:      "paperclip",
-					Url:       "https://github.com/thoughtbot/paperclip",
-					Archived:  true,
-					Diagnosed: true,
-				},
-				{
-					Name:      "dotenv",
-					Url:       "",
-					Archived:  false,
-					Diagnosed: false,
-				},
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		bundler.Report(tt.diagnoses)
-		// Output:
-		// aaa
-	}
+		r := bundler.Diagnose(f)
+		assert.Equal(t, expect, r)
+	})
 }
