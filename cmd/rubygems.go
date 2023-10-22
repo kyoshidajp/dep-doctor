@@ -1,4 +1,4 @@
-package bundler
+package cmd
 
 import (
 	"encoding/json"

@@ -1,10 +1,9 @@
-package bundler_test
+package cmd
 
 import (
 	"strings"
 	"testing"
 
-	"github.com/kyoshidajp/dep-doctor/cmd/ruby/bundler"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -38,7 +37,7 @@ func TestFetchFromRubyGems(t *testing.T) {
 
 	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := bundler.FetchFromRubyGems(tt.gem_name)
+			r := FetchFromRubyGems(tt.gem_name)
 			expect := expects[i]
 			assert.Equal(t, true, strings.HasPrefix(r, expect.url))
 		})

@@ -1,16 +1,15 @@
-package bundler_test
+package cmd
 
 import (
 	"os"
 	"testing"
 
-	"github.com/kyoshidajp/dep-doctor/cmd/ruby/bundler"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestDiagnose(t *testing.T) {
-	expect := map[string]bundler.Diagnosis{
+	expect := map[string]Diagnosis{
 		"faker": {
 			Name:      "faker",
 			Url:       "https://github.com/faker-ruby/faker",
@@ -43,18 +42,19 @@ func TestDiagnose(t *testing.T) {
 		},
 		"dotenv": {
 			Name:      "dotenv",
-			Url:       "",
+			Url:       "https://github.com/bkeepers/dotenv",
 			Archived:  false,
-			Diagnosed: false,
+			Diagnosed: true,
 		},
 	}
 
 	t.Run("test", func(t *testing.T) {
-		f, err := os.Open("testdata/Gemfile.lock")
+		f, err := os.Open("ruby/bundler/testdata/Gemfile.lock")
 		require.NoError(t, err)
 		defer f.Close()
 
-		r := bundler.Diagnose(f)
-		assert.Equal(t, expect, r)
+		doctor := NewDoctor(NewBundlerStrategy())
+		diagnoses := doctor.Diagnose(f)
+		assert.Equal(t, expect, diagnoses)
 	})
 }
