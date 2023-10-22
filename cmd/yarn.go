@@ -32,38 +32,6 @@ func FetchFromNodejs(name string) string {
 	return NodejsRegistryResponse.Repository.Url
 }
 
-func getNameWithOwners2(r parser_io.ReadSeekerAt) []github.NameWithOwner {
-	var nameWithOwners []github.NameWithOwner
-	libs, _, _ := yarn.NewParser().Parse(r)
-
-	for _, lib := range libs {
-		fmt.Printf("%s\n", lib.Name)
-
-		githubUrl := FetchFromNodejs(lib.Name)
-		repo, err := github.ParseGitHubUrl(githubUrl)
-
-		if err != nil {
-			nameWithOwners = append(nameWithOwners,
-				github.NameWithOwner{
-					PackageName: lib.Name,
-					CanSearch:   false,
-				},
-			)
-		} else {
-			nameWithOwners = append(nameWithOwners,
-				github.NameWithOwner{
-					Repo:        repo.Repo,
-					Owner:       repo.Owner,
-					PackageName: lib.Name,
-					CanSearch:   true,
-				},
-			)
-		}
-	}
-
-	return nameWithOwners
-}
-
 type YarnStrategy struct {
 }
 
@@ -71,10 +39,10 @@ func NewYarnStrategy() *YarnStrategy {
 	return &YarnStrategy{}
 }
 
-func (d *YarnStrategy) Diagnose(r parser_io.ReadSeekerAt) map[string]Diagnosis {
+func (s *YarnStrategy) Diagnose(r parser_io.ReadSeekerAt) map[string]Diagnosis {
 	diagnoses := make(map[string]Diagnosis)
 	slicedNameWithOwners := [][]github.NameWithOwner{}
-	nameWithOwners := getNameWithOwners2(r)
+	nameWithOwners := s.getNameWithOwners(r)
 	sliceSize := len(nameWithOwners)
 
 	for i := 0; i < sliceSize; i += GITHUB_SEARCH_REPO_COUNT_PER_ONCE {
@@ -110,4 +78,36 @@ func (d *YarnStrategy) Diagnose(r parser_io.ReadSeekerAt) map[string]Diagnosis {
 		diagnoses[nameWithOwner.PackageName] = diagnosis
 	}
 	return diagnoses
+}
+
+func (s *YarnStrategy) getNameWithOwners(r parser_io.ReadSeekerAt) []github.NameWithOwner {
+	var nameWithOwners []github.NameWithOwner
+	libs, _, _ := yarn.NewParser().Parse(r)
+
+	for _, lib := range libs {
+		fmt.Printf("%s\n", lib.Name)
+
+		githubUrl := FetchFromNodejs(lib.Name)
+		repo, err := github.ParseGitHubUrl(githubUrl)
+
+		if err != nil {
+			nameWithOwners = append(nameWithOwners,
+				github.NameWithOwner{
+					PackageName: lib.Name,
+					CanSearch:   false,
+				},
+			)
+		} else {
+			nameWithOwners = append(nameWithOwners,
+				github.NameWithOwner{
+					Repo:        repo.Repo,
+					Owner:       repo.Owner,
+					PackageName: lib.Name,
+					CanSearch:   true,
+				},
+			)
+		}
+	}
+
+	return nameWithOwners
 }
