@@ -40,7 +40,7 @@ func (d *Doctor) Diagnose(r io.ReadSeekCloserAt) map[string]Diagnosis {
 
 var DoctorWithStrategy = map[string]DiagnoseStrategy{
 	"bundler": NewBundlerStrategy(),
-	// "yarn": NewYarnStrategy(),
+	"yarn":    NewYarnStrategy(),
 }
 
 type Options struct {
@@ -60,12 +60,12 @@ var diagnoseCmd = &cobra.Command{
 		f, _ := os.Open(lockFilePath)
 		defer f.Close()
 
-		packageManagerName, ok := DoctorWithStrategy[o.packageManagerName]
+		packageManagerStrategy, ok := DoctorWithStrategy[o.packageManagerName]
 		if !ok {
 			log.Fatal("unknown package manager")
 		}
 
-		doctor := NewDoctor(packageManagerName)
+		doctor := NewDoctor(packageManagerStrategy)
 		diagnoses := doctor.Diagnose(f)
 		err := Report(diagnoses)
 		if err != nil {

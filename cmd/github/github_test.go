@@ -12,16 +12,40 @@ func TestParseGitHubUrl(t *testing.T) {
 		url  string
 	}{
 		{
-			name: "active repository",
+			name: "http scheme repository",
 			url:  "https://github.com/rails/thor/tree/v1.3.0",
+		},
+		{
+			name: "git scheme repository",
+			url:  "git@github.com:rails/thor.git",
+		},
+		{
+			name: "git+https scheme repository",
+			url:  "git+https://github.com/then/promise.git",
+		},
+	}
+
+	expects := map[string]GitHubRepository{
+		"http scheme repository": {
+			Owner: "rails",
+			Repo:  "thor",
+		},
+		"git scheme repository": {
+			Owner: "rails",
+			Repo:  "thor",
+		},
+		"git+https scheme repository": {
+			Owner: "then",
+			Repo:  "promise",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r, _ := ParseGitHubUrl(tt.url)
-			assert.Equal(t, "rails", r.Owner)
-			assert.Equal(t, "thor", r.Repo)
+			expect := expects[tt.name]
+			assert.Equal(t, expect.Owner, r.Owner)
+			assert.Equal(t, expect.Repo, r.Repo)
 		})
 	}
 }

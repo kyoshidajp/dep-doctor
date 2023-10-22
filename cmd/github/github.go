@@ -5,11 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	net_url "net/url"
 	"os"
 	"strings"
 
 	"github.com/shurcooL/githubv4"
+	giturls "github.com/whilp/git-urls"
 	"golang.org/x/oauth2"
 )
 
@@ -35,18 +35,30 @@ func (n NameWithOwner) GetName() string {
 }
 
 func ParseGitHubUrl(url string) (GitHubRepository, error) {
-	u, err := net_url.Parse(url)
+	u, err := giturls.Parse(url)
 	if err != nil {
 		return GitHubRepository{}, errors.New("error: Unknown URL")
 	}
 
+	var owner, repo string
 	paths := strings.Split(u.Path, "/")
-	if len(paths) < 3 {
-		return GitHubRepository{}, errors.New("error: Unknown URL")
+	if u.Scheme == "ssh" {
+		owner = paths[0]
+		repo = strings.Replace(paths[1], ".git", "", 1)
+	} else if u.Scheme == "https" || u.Scheme == "http" {
+		if len(paths) < 3 {
+			return GitHubRepository{}, errors.New("error: Unknown URL")
+		}
+		owner = paths[1]
+		repo = paths[2]
+	} else if u.Scheme == "file" {
+		owner = paths[3]
+		repo = strings.Replace(paths[4], ".git", "", 1)
 	}
+
 	return GitHubRepository{
-		Owner: paths[1],
-		Repo:  paths[2],
+		Owner: owner,
+		Repo:  repo,
 		Url:   url,
 	}, nil
 }
