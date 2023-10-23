@@ -34,10 +34,14 @@ func (n NameWithOwner) GetName() string {
 	return fmt.Sprintf("repo:%s/%s", n.Owner, n.Repo)
 }
 
-func ParseGitHubUrl(url string) (GitHubRepository, error) {
-	u, err := giturls.Parse(url)
+type GitHubURL struct {
+	URL string
+}
+
+func (githuburl GitHubURL) Parse() (string, string, error) {
+	u, err := giturls.Parse(githuburl.URL)
 	if err != nil {
-		return GitHubRepository{}, errors.New("error: Unknown URL")
+		return "", "", errors.New("error: Unknown URL")
 	}
 
 	var owner, repo string
@@ -47,7 +51,7 @@ func ParseGitHubUrl(url string) (GitHubRepository, error) {
 		repo = strings.Replace(paths[1], ".git", "", 1)
 	} else if u.Scheme == "https" || u.Scheme == "http" {
 		if len(paths) < 3 {
-			return GitHubRepository{}, errors.New("error: Unknown URL")
+			return "", "", errors.New("error: Unknown URL")
 		}
 		owner = paths[1]
 		repo = paths[2]
@@ -55,7 +59,17 @@ func ParseGitHubUrl(url string) (GitHubRepository, error) {
 		owner = paths[3]
 		repo = strings.Replace(paths[4], ".git", "", 1)
 	}
+	return owner, repo, nil
+}
 
+func ParseGitHubUrl(url string) (GitHubRepository, error) {
+	githubURL := GitHubURL{
+		URL: url,
+	}
+	owner, repo, err := githubURL.Parse()
+	if err != nil {
+		return GitHubRepository{}, err
+	}
 	return GitHubRepository{
 		Owner: owner,
 		Repo:  repo,
