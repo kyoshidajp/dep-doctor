@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/shurcooL/githubv4"
 	giturls "github.com/whilp/git-urls"
@@ -16,11 +17,12 @@ import (
 const QUERY_SEPARATOR = " "
 
 type GitHubRepository struct {
-	Name     string
-	Owner    string
-	Repo     string
-	Url      string
-	Archived bool
+	Name            string
+	Owner           string
+	Repo            string
+	Url             string
+	Archived        bool
+	LastCommittedAt time.Time
 }
 
 type NameWithOwner struct {
@@ -94,11 +96,24 @@ func FetchFromGitHub(nameWithOwners []NameWithOwner) []GitHubRepository {
 			RepositoryCount githubv4.Int
 			Nodes           []struct {
 				Repository struct {
-					IsArchived    githubv4.Boolean
-					NameWithOwner githubv4.String
-					IsMirror      githubv4.Boolean
-					Url           githubv4.String
-					Name          githubv4.String
+					IsArchived       githubv4.Boolean
+					NameWithOwner    githubv4.String
+					IsMirror         githubv4.Boolean
+					Url              githubv4.String
+					Name             githubv4.String
+					DefaultBranchRef struct {
+						Target struct {
+							Commit struct {
+								History struct {
+									Edges []struct {
+										Node struct {
+											CommittedDate githubv4.DateTime
+										}
+									}
+								} `graphql:"history(first:1)"`
+							} `graphql:"... on Commit"`
+						}
+					}
 				} `graphql:"... on Repository"`
 			}
 		} `graphql:"search(query:$query, first:$count, type:REPOSITORY)"`
@@ -118,10 +133,11 @@ func FetchFromGitHub(nameWithOwners []NameWithOwner) []GitHubRepository {
 	repos := []GitHubRepository{}
 	for _, node := range query.Search.Nodes {
 		repos = append(repos, GitHubRepository{
-			Repo:     string(node.Repository.NameWithOwner),
-			Archived: bool(node.Repository.IsArchived),
-			Url:      string(node.Repository.Url),
-			Name:     string(node.Repository.Name),
+			Repo:            string(node.Repository.NameWithOwner),
+			Archived:        bool(node.Repository.IsArchived),
+			Url:             string(node.Repository.Url),
+			Name:            string(node.Repository.Name),
+			LastCommittedAt: time.Time(node.Repository.DefaultBranchRef.Target.Commit.History.Edges[0].Node.CommittedDate.Time),
 		})
 	}
 
