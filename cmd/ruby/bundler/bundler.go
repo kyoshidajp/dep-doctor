@@ -19,7 +19,11 @@ func getNameWithOwners(r io.ReadSeekerAt) []github.NameWithOwner {
 	for _, lib := range libs {
 		fmt.Printf("%s\n", lib.Name)
 
-		githubUrl := cmd.FetchFromRubyGems(lib.Name)
+		githubUrl, err := cmd.FetchFromRubyGems(lib.Name)
+		if err != nil {
+			continue
+		}
+
 		repo, err := github.ParseGitHubUrl(githubUrl)
 
 		if err != nil {

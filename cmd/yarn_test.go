@@ -37,7 +37,7 @@ func TestFetchFromRubyGems(t *testing.T) {
 
 	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := FetchFromRubyGems(tt.gem_name)
+			r, _ := FetchFromRubyGems(tt.gem_name)
 			expect := expects[i]
 			assert.Equal(t, true, strings.HasPrefix(r, expect.url))
 		})

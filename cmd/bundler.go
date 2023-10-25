@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -22,7 +23,7 @@ type GemResponse struct {
 	HomepageUri   string `json:"homepage_uri"`
 }
 
-func FetchFromRubyGems(name string) string {
+func FetchFromRubyGems(name string) (string, error) {
 	url := fmt.Sprintf(RUBYGEMS_ORG_API, name)
 	req, _ := http.NewRequest(http.MethodGet, url, nil)
 	client := new(http.Client)
@@ -30,15 +31,18 @@ func FetchFromRubyGems(name string) string {
 	body, _ := io.ReadAll(resp.Body)
 
 	var Gem GemResponse
-	json.Unmarshal(body, &Gem)
-
-	if Gem.SourceCodeUri != "" {
-		return Gem.SourceCodeUri
-	} else if Gem.HomepageUri != "" {
-		return Gem.HomepageUri
+	err := json.Unmarshal(body, &Gem)
+	if err != nil {
+		return "", errors.New("error: Unknown response")
 	}
 
-	return ""
+	if Gem.SourceCodeUri != "" {
+		return Gem.SourceCodeUri, nil
+	} else if Gem.HomepageUri != "" {
+		return Gem.HomepageUri, nil
+	}
+
+	return "", nil
 }
 
 type BundlerStrategy struct {
@@ -98,7 +102,7 @@ func (s *BundlerStrategy) getNameWithOwners(r parser_io.ReadSeekerAt) []github.N
 	for _, lib := range libs {
 		fmt.Printf("%s\n", lib.Name)
 
-		githubUrl := FetchFromRubyGems(lib.Name)
+		githubUrl, err := FetchFromRubyGems(lib.Name)
 		repo, err := github.ParseGitHubUrl(githubUrl)
 
 		if err != nil {
