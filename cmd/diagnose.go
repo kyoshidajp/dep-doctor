@@ -13,8 +13,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const MAX_YEAR_OF_MAINTENANCE = 5
+
 type DiagnoseStrategy interface {
-	Diagnose(r io.ReadSeekerAt) map[string]Diagnosis
+	Diagnose(r io.ReadSeekerAt, year int) map[string]Diagnosis
 }
 
 type Diagnosis struct {
@@ -22,6 +24,7 @@ type Diagnosis struct {
 	Url       string
 	Archived  bool
 	Diagnosed bool
+	IsActive  bool
 }
 
 type Doctor struct {
@@ -34,8 +37,8 @@ func NewDoctor(strategy DiagnoseStrategy) *Doctor {
 	}
 }
 
-func (d *Doctor) Diagnose(r io.ReadSeekCloserAt) map[string]Diagnosis {
-	return d.strategy.Diagnose(r)
+func (d *Doctor) Diagnose(r io.ReadSeekCloserAt, year int) map[string]Diagnosis {
+	return d.strategy.Diagnose(r, year)
 }
 
 var DoctorWithStrategy = map[string]DiagnoseStrategy{
@@ -66,7 +69,7 @@ var diagnoseCmd = &cobra.Command{
 		}
 
 		doctor := NewDoctor(packageManagerStrategy)
-		diagnoses := doctor.Diagnose(f)
+		diagnoses := doctor.Diagnose(f, MAX_YEAR_OF_MAINTENANCE)
 		err := Report(diagnoses)
 		if err != nil {
 			os.Exit(1)
@@ -93,6 +96,10 @@ func Report(diagnoses map[string]Diagnosis) error {
 		}
 		if diagnosis.Archived {
 			errMessages = append(errMessages, fmt.Sprintf("[error] %s (archived): %s", diagnosis.Name, diagnosis.Url))
+			errorCount += 1
+		}
+		if !diagnosis.IsActive {
+			errMessages = append(errMessages, fmt.Sprintf("[error] %s (not-maintained): %s", diagnosis.Name, diagnosis.Url))
 			errorCount += 1
 		}
 	}

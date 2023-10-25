@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/shurcooL/githubv4"
+	"github.com/tenntenn/testtime"
 	giturls "github.com/whilp/git-urls"
 	"golang.org/x/oauth2"
 )
@@ -23,6 +24,12 @@ type GitHubRepository struct {
 	Url             string
 	Archived        bool
 	LastCommittedAt time.Time
+}
+
+func (r GitHubRepository) IsActive(year int) bool {
+	now := testtime.Now()
+	targetDate := r.LastCommittedAt.AddDate(year, 0, 0)
+	return targetDate.After(now)
 }
 
 type NameWithOwner struct {

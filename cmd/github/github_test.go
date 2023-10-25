@@ -2,9 +2,48 @@ package github
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/tenntenn/testtime"
 )
+
+func TestGitHubRepository_IsActive(t *testing.T) {
+	cases := []struct {
+		name            string
+		now             time.Time
+		lastCommittedAt time.Time
+		year            int
+		want            bool
+	}{
+		{
+			"active",
+			time.Date(2023, time.January, 1, 0, 0, 0, 0, time.UTC),
+			time.Date(2020, time.January, 1, 0, 0, 0, 0, time.UTC),
+			5,
+			true,
+		},
+		{
+			"not active",
+			time.Date(2023, time.January, 1, 0, 0, 0, 0, time.UTC),
+			time.Date(2015, time.January, 1, 0, 0, 0, 0, time.UTC),
+			5,
+			false,
+		},
+	}
+
+	for _, tt := range cases {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			g := &GitHubRepository{
+				LastCommittedAt: tt.lastCommittedAt,
+			}
+			testtime.SetTime(t, tt.now)
+			got := g.IsActive(tt.year)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
 
 func TestParseGitHubUrl(t *testing.T) {
 	tests := []struct {

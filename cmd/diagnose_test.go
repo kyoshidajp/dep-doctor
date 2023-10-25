@@ -15,36 +15,42 @@ func TestDiagnose(t *testing.T) {
 			Url:       "https://github.com/faker-ruby/faker",
 			Archived:  false,
 			Diagnosed: true,
+			IsActive:  true,
 		},
 		"concurrent-ruby": {
 			Name:      "concurrent-ruby",
 			Url:       "https://github.com/ruby-concurrency/concurrent-ruby",
 			Archived:  false,
 			Diagnosed: true,
+			IsActive:  true,
 		},
 		"i18n": {
 			Name:      "i18n",
 			Url:       "https://github.com/ruby-i18n/i18n",
 			Archived:  false,
 			Diagnosed: true,
+			IsActive:  true,
 		},
 		"method_source": {
 			Name:      "method_source",
 			Url:       "https://github.com/banister/method_source",
 			Archived:  false,
 			Diagnosed: true,
+			IsActive:  true,
 		},
 		"paperclip": {
 			Name:      "paperclip",
 			Url:       "https://github.com/thoughtbot/paperclip",
 			Archived:  true,
 			Diagnosed: true,
+			IsActive:  false,
 		},
 		"dotenv": {
 			Name:      "dotenv",
 			Url:       "https://github.com/bkeepers/dotenv",
 			Archived:  false,
 			Diagnosed: true,
+			IsActive:  true,
 		},
 	}
 
@@ -54,7 +60,7 @@ func TestDiagnose(t *testing.T) {
 		defer f.Close()
 
 		doctor := NewDoctor(NewBundlerStrategy())
-		diagnoses := doctor.Diagnose(f)
+		diagnoses := doctor.Diagnose(f, 2)
 		assert.Equal(t, expect, diagnoses)
 	})
 }

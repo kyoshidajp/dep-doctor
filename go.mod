@@ -36,6 +36,7 @@ require (
 	github.com/shurcooL/githubv4 v0.0.0-20230704064427-599ae7bbf278
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stretchr/testify v1.8.4
+	github.com/tenntenn/testtime v0.2.2
 	github.com/whilp/git-urls v1.0.0
 	golang.org/x/oauth2 v0.13.0
 )

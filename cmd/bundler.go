@@ -48,7 +48,7 @@ func NewBundlerStrategy() *BundlerStrategy {
 	return &BundlerStrategy{}
 }
 
-func (s *BundlerStrategy) Diagnose(r parser_io.ReadSeekerAt) map[string]Diagnosis {
+func (s *BundlerStrategy) Diagnose(r parser_io.ReadSeekerAt, year int) map[string]Diagnosis {
 	diagnoses := make(map[string]Diagnosis)
 	slicedNameWithOwners := [][]github.NameWithOwner{}
 	nameWithOwners := s.getNameWithOwners(r)
@@ -70,6 +70,7 @@ func (s *BundlerStrategy) Diagnose(r parser_io.ReadSeekerAt) map[string]Diagnosi
 				Url:       r.Url,
 				Archived:  r.Archived,
 				Diagnosed: true,
+				IsActive:  r.IsActive(year),
 			}
 			diagnoses[r.Name] = diagnosis
 		}

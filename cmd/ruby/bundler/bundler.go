@@ -47,7 +47,7 @@ func getNameWithOwners(r io.ReadSeekerAt) []github.NameWithOwner {
 type BundlerDoctor struct {
 }
 
-func (d *BundlerDoctor) Diagnose(r io.ReadSeekerAt) map[string]cmd.Diagnosis {
+func (d *BundlerDoctor) Diagnose(r io.ReadSeekerAt, year int) map[string]cmd.Diagnosis {
 	diagnoses := make(map[string]cmd.Diagnosis)
 	slicedNameWithOwners := [][]github.NameWithOwner{}
 	nameWithOwners := getNameWithOwners(r)
@@ -69,6 +69,7 @@ func (d *BundlerDoctor) Diagnose(r io.ReadSeekerAt) map[string]cmd.Diagnosis {
 				Url:       r.Url,
 				Archived:  r.Archived,
 				Diagnosed: true,
+				IsActive:  r.IsActive(year),
 			}
 			diagnoses[r.Name] = diagnosis
 		}
