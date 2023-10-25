@@ -22,3 +22,8 @@ builds:
       - linux
       - windows
       - darwin
+brews:
+  - repository:
+      owner: kyoshidajp
+      name: homebrew-dep-doctor
+      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
