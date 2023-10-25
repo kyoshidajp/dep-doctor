@@ -23,7 +23,8 @@
 ### Homebrew (macOS and Linux)
 
 ```console
-$ brew install kyoshidajp/tap/dep-doctor
+$ brew tap kyoshidajp/dep-doctor
+$ brew install kyoshidajp/dep-doctor/dep-doctor
 ```
 
 ### Binary packages
