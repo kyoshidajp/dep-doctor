@@ -51,6 +51,10 @@ func TestParseGitHubUrl(t *testing.T) {
 		url  string
 	}{
 		{
+			name: "github.com repository",
+			url:  "github.com/bvaughn/highlight-words-core.git",
+		},
+		{
 			name: "http scheme repository",
 			url:  "https://github.com/rails/thor/tree/v1.3.0",
 		},
@@ -65,6 +69,10 @@ func TestParseGitHubUrl(t *testing.T) {
 	}
 
 	expects := map[string]GitHubRepository{
+		"github.com repository": {
+			Owner: "bvaughn",
+			Repo:  "highlight-words-core",
+		},
 		"http scheme repository": {
 			Owner: "rails",
 			Repo:  "thor",

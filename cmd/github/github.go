@@ -48,6 +48,10 @@ type GitHubURL struct {
 }
 
 func (githuburl GitHubURL) Parse() (string, string, error) {
+	if githuburl.URL == "" {
+		return "", "", errors.New("error: Blank URL")
+	}
+
 	u, err := giturls.Parse(githuburl.URL)
 	if err != nil {
 		return "", "", errors.New("error: Unknown URL")
@@ -65,8 +69,13 @@ func (githuburl GitHubURL) Parse() (string, string, error) {
 		owner = paths[1]
 		repo = paths[2]
 	} else if u.Scheme == "file" {
-		owner = paths[3]
-		repo = strings.Replace(paths[4], ".git", "", 1)
+		if paths[0] == "github.com" {
+			owner = paths[1]
+			repo = strings.Replace(paths[2], ".git", "", 1)
+		} else {
+			owner = paths[3]
+			repo = strings.Replace(paths[4], ".git", "", 1)
+		}
 	}
 	return owner, repo, nil
 }
