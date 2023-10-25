@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const MAX_YEAR_OF_MAINTENANCE = 5
+const MAX_YEAR_TO_BE_BLANK = 5
 
 type DiagnoseStrategy interface {
 	Diagnose(r io.ReadSeekerAt, year int) map[string]Diagnosis
@@ -69,7 +69,7 @@ var diagnoseCmd = &cobra.Command{
 		}
 
 		doctor := NewDoctor(packageManagerStrategy)
-		diagnoses := doctor.Diagnose(f, MAX_YEAR_OF_MAINTENANCE)
+		diagnoses := doctor.Diagnose(f, MAX_YEAR_TO_BE_BLANK)
 		err := Report(diagnoses)
 		if err != nil {
 			os.Exit(1)
