@@ -103,6 +103,10 @@ func (s *BundlerStrategy) getNameWithOwners(r parser_io.ReadSeekerAt) []github.N
 		fmt.Printf("%s\n", lib.Name)
 
 		githubUrl, err := FetchFromRubyGems(lib.Name)
+		if err != nil {
+			continue
+		}
+
 		repo, err := github.ParseGitHubUrl(githubUrl)
 
 		if err != nil {

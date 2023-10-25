@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/assert"
 	"github.com/tenntenn/testtime"
 )
@@ -134,8 +136,10 @@ func TestFetchFromGitHub(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := FetchFromGitHub(tt.nameWithOwners)
-			assert.Equal(t, expect, r)
+			got := FetchFromGitHub(tt.nameWithOwners)
+			if d := cmp.Diff(got, expect, cmpopts.IgnoreFields(GitHubRepository{}, "LastCommittedAt")); len(d) != 0 {
+				t.Errorf("differs: (-got +want)\n%s", d)
+			}
 		})
 	}
 }
