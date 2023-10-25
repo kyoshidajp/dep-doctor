@@ -145,8 +145,12 @@ func FetchFromGitHub(nameWithOwners []NameWithOwner) []GitHubRepository {
 		"count": githubv4.Int(len(names)),
 	}
 
-	client.Query(context.Background(), &query, variables)
 	repos := []GitHubRepository{}
+	err := client.Query(context.Background(), &query, variables)
+	if err != nil {
+		return repos
+	}
+
 	for _, node := range query.Search.Nodes {
 		repos = append(repos, GitHubRepository{
 			Repo:            string(node.Repository.NameWithOwner),

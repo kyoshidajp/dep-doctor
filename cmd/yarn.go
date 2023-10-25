@@ -27,7 +27,10 @@ func FetchFromNodejs(name string) string {
 	body, _ := io.ReadAll(resp.Body)
 
 	var NodejsRegistryResponse NodejsRegistryResponse
-	json.Unmarshal(body, &NodejsRegistryResponse)
+	err := json.Unmarshal(body, &NodejsRegistryResponse)
+	if err != nil {
+		return ""
+	}
 
 	return NodejsRegistryResponse.Repository.Url
 }
