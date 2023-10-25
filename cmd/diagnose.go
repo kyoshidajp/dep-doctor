@@ -57,7 +57,7 @@ var (
 
 var diagnoseCmd = &cobra.Command{
 	Use:   "diagnose",
-	Short: "Diagnose packages",
+	Short: "Diagnose dependencies",
 	Run: func(cmd *cobra.Command, args []string) {
 		lockFilePath := o.lockFilePath
 		f, _ := os.Open(lockFilePath)
