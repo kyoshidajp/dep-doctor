@@ -46,8 +46,8 @@ func (d *Department) Diagnose(r io.ReadSeekCloserAt, year int) map[string]Diagno
 }
 
 type Options struct {
-	packageManagerName string
-	lockFilePath       string
+	packageManager string
+	lockFilePath   string
 }
 
 var (
@@ -64,19 +64,30 @@ var diagnoseCmd = &cobra.Command{
 	Use:   "diagnose",
 	Short: "Diagnose dependencies",
 	Run: func(cmd *cobra.Command, args []string) {
-		lockFilePath := o.lockFilePath
-		f, _ := os.Open(lockFilePath)
-		defer f.Close()
-
-		doctor, ok := doctors[o.packageManagerName]
+		doctor, ok := doctors[o.packageManager]
 		if !ok {
-			log.Fatal("unknown package manager")
+			packages := []string{}
+			for p := range doctors {
+				packages = append(packages, p)
+			}
+			m := fmt.Sprintf("Unknown package manager: %s. You can choose from [%s]", o.packageManager, strings.Join(packages, ", "))
+			log.Fatal(m)
+		}
+
+		lockFilePath := o.lockFilePath
+		f, err := os.Open(lockFilePath)
+		defer func() {
+			_ = f.Close()
+		}()
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			m := fmt.Sprintf("Can't open: %s.", o.lockFilePath)
+			log.Fatal(m)
 		}
 
 		department := NewDepartment(doctor)
 		diagnoses := department.Diagnose(f, MAX_YEAR_TO_BE_BLANK)
-		err := Report(diagnoses)
-		if err != nil {
+		if err := Report(diagnoses); err != nil {
 			os.Exit(1)
 		}
 	},
@@ -84,14 +95,14 @@ var diagnoseCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(diagnoseCmd)
-	diagnoseCmd.Flags().StringVarP(&o.packageManagerName, "package", "p", "bundler", "package manager")
+	diagnoseCmd.Flags().StringVarP(&o.packageManager, "package", "p", "bundler", "package manager")
 	diagnoseCmd.Flags().StringVarP(&o.lockFilePath, "lock_file", "f", "Gemfile.lock", "lock file path")
 }
 
 func Report(diagnoses map[string]Diagnosis) error {
 	errMessages := []string{}
 	warnMessages := []string{}
-	errorCount := 0
+	errCount := 0
 	unDiagnosedCount := 0
 	for _, diagnosis := range diagnoses {
 		if !diagnosis.Diagnosed {
@@ -101,11 +112,11 @@ func Report(diagnoses map[string]Diagnosis) error {
 		}
 		if diagnosis.Archived {
 			errMessages = append(errMessages, fmt.Sprintf("[error] %s (archived): %s", diagnosis.Name, diagnosis.Url))
-			errorCount += 1
+			errCount += 1
 		}
 		if !diagnosis.IsActive {
 			errMessages = append(errMessages, fmt.Sprintf("[error] %s (not-maintained): %s", diagnosis.Name, diagnosis.Url))
-			errorCount += 1
+			errCount += 1
 		}
 	}
 
@@ -121,7 +132,7 @@ func Report(diagnoses map[string]Diagnosis) error {
 		Diagnose complete! %d dependencies.
 		%d error, %d unknown`,
 		len(diagnoses),
-		errorCount,
+		errCount,
 		unDiagnosedCount),
 	)
 
