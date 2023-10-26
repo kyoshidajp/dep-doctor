@@ -9,14 +9,18 @@ import (
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/aquasecurity/go-dep-parser/pkg/io"
+	parser_io "github.com/aquasecurity/go-dep-parser/pkg/io"
 	"github.com/fatih/color"
+	"github.com/kyoshidajp/dep-doctor/cmd/github"
 	"github.com/spf13/cobra"
 )
 
 const MAX_YEAR_TO_BE_BLANK = 5
 
-type DiagnoseStrategy interface {
+type Doctor interface {
 	Diagnose(r io.ReadSeekerAt, year int) map[string]Diagnosis
+	fetchURLFromRepository(name string) (string, error)
+	NameWithOwners(r parser_io.ReadSeekerAt) []github.NameWithOwner
 }
 
 type Diagnosis struct {
@@ -27,23 +31,18 @@ type Diagnosis struct {
 	IsActive  bool
 }
 
-type Doctor struct {
-	strategy DiagnoseStrategy
+type Department struct {
+	doctor Doctor
 }
 
-func NewDoctor(strategy DiagnoseStrategy) *Doctor {
-	return &Doctor{
-		strategy: strategy,
+func NewDepartment(d Doctor) *Department {
+	return &Department{
+		doctor: d,
 	}
 }
 
-func (d *Doctor) Diagnose(r io.ReadSeekCloserAt, year int) map[string]Diagnosis {
-	return d.strategy.Diagnose(r, year)
-}
-
-var DoctorWithStrategy = map[string]DiagnoseStrategy{
-	"bundler": NewBundlerStrategy(),
-	"yarn":    NewYarnStrategy(),
+func (d *Department) Diagnose(r io.ReadSeekCloserAt, year int) map[string]Diagnosis {
+	return d.doctor.Diagnose(r, year)
 }
 
 type Options struct {
@@ -55,6 +54,11 @@ var (
 	o = &Options{}
 )
 
+var doctors = map[string]Doctor{
+	"bundler": NewBundlerDoctor(),
+	"yarn":    NewYarnDoctor(),
+}
+
 var diagnoseCmd = &cobra.Command{
 	Use:   "diagnose",
 	Short: "Diagnose dependencies",
@@ -63,13 +67,13 @@ var diagnoseCmd = &cobra.Command{
 		f, _ := os.Open(lockFilePath)
 		defer f.Close()
 
-		packageManagerStrategy, ok := DoctorWithStrategy[o.packageManagerName]
+		doctor, ok := doctors[o.packageManagerName]
 		if !ok {
 			log.Fatal("unknown package manager")
 		}
 
-		doctor := NewDoctor(packageManagerStrategy)
-		diagnoses := doctor.Diagnose(f, MAX_YEAR_TO_BE_BLANK)
+		department := NewDepartment(doctor)
+		diagnoses := department.Diagnose(f, MAX_YEAR_TO_BE_BLANK)
 		err := Report(diagnoses)
 		if err != nil {
 			os.Exit(1)
