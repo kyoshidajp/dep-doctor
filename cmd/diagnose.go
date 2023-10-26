@@ -46,8 +46,8 @@ func (d *Department) Diagnose(r io.ReadSeekCloserAt, year int) map[string]Diagno
 }
 
 type Options struct {
-	packageManagerName string
-	lockFilePath       string
+	packageManager string
+	lockFilePath   string
 }
 
 var (
@@ -64,14 +64,19 @@ var diagnoseCmd = &cobra.Command{
 	Use:   "diagnose",
 	Short: "Diagnose dependencies",
 	Run: func(cmd *cobra.Command, args []string) {
+		doctor, ok := doctors[o.packageManager]
+		if !ok {
+			packages := []string{}
+			for p := range doctors {
+				packages = append(packages, p)
+			}
+			m := fmt.Sprintf("unknown package manager: %s. You can choose from [%s]", o.packageManager, strings.Join(packages, ", "))
+			log.Fatal(m)
+		}
+
 		lockFilePath := o.lockFilePath
 		f, _ := os.Open(lockFilePath)
 		defer f.Close()
-
-		doctor, ok := doctors[o.packageManagerName]
-		if !ok {
-			log.Fatal("unknown package manager")
-		}
 
 		department := NewDepartment(doctor)
 		diagnoses := department.Diagnose(f, MAX_YEAR_TO_BE_BLANK)
@@ -84,7 +89,7 @@ var diagnoseCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(diagnoseCmd)
-	diagnoseCmd.Flags().StringVarP(&o.packageManagerName, "package", "p", "bundler", "package manager")
+	diagnoseCmd.Flags().StringVarP(&o.packageManager, "package", "p", "bundler", "package manager")
 	diagnoseCmd.Flags().StringVarP(&o.lockFilePath, "lock_file", "f", "Gemfile.lock", "lock file path")
 }
 
