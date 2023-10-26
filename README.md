@@ -10,13 +10,14 @@
 
 ## Support dependencies files
 
-| Language | file | status |
-| -------- | --------------- | :----: |
-| Ruby | Gemfile.lock | YES |
-| Ruby | gemspec | NO (but soon) |
-| JavaScript | yarn.lock | YES |
-| JavaScript | package.json | NO (but soon) |
-| Go | go.sum | NO (but soon) |
+| Language | package manager | file (e.g.) | status |
+| -------- | ------------- | -- | :----: |
+| Ruby | bundler | Gemfile.lock | :heavy_check_mark: |
+| Ruby | bundler | gemspec | (soon) |
+| JavaScript | yarn | yarn.lock | :heavy_check_mark: |
+| JavaScript | npm | package.json | (soon) |
+| Python | pip | requirements.txt | :heavy_check_mark: |
+| Go | | go.sum | (soon) |
 
 ## Install
 
