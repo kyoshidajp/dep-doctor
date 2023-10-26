@@ -57,6 +57,7 @@ var (
 var doctors = map[string]Doctor{
 	"bundler": NewBundlerDoctor(),
 	"yarn":    NewYarnDoctor(),
+	"pip":     NewPipDoctor(),
 }
 
 var diagnoseCmd = &cobra.Command{
