@@ -19,7 +19,14 @@ type NodejsRegistryResponse struct {
 	}
 }
 
-func FetchFromNodejs(name string) string {
+type YarnDoctor struct {
+}
+
+func NewYarnDoctor() *YarnDoctor {
+	return &YarnDoctor{}
+}
+
+func (d *YarnDoctor) fetchURLFromRepository(name string) (string, error) {
 	url := fmt.Sprintf(NODEJS_REGISTRY_API, name)
 	req, _ := http.NewRequest(http.MethodGet, url, nil)
 	client := new(http.Client)
@@ -29,23 +36,16 @@ func FetchFromNodejs(name string) string {
 	var NodejsRegistryResponse NodejsRegistryResponse
 	err := json.Unmarshal(body, &NodejsRegistryResponse)
 	if err != nil {
-		return ""
+		return "", nil
 	}
 
-	return NodejsRegistryResponse.Repository.Url
+	return NodejsRegistryResponse.Repository.Url, nil
 }
 
-type YarnStrategy struct {
-}
-
-func NewYarnStrategy() *YarnStrategy {
-	return &YarnStrategy{}
-}
-
-func (s *YarnStrategy) Diagnose(r parser_io.ReadSeekerAt, year int) map[string]Diagnosis {
+func (d *YarnDoctor) Diagnose(r parser_io.ReadSeekerAt, year int) map[string]Diagnosis {
 	diagnoses := make(map[string]Diagnosis)
 	slicedNameWithOwners := [][]github.NameWithOwner{}
-	nameWithOwners := s.getNameWithOwners(r)
+	nameWithOwners := d.NameWithOwners(r)
 	sliceSize := len(nameWithOwners)
 
 	for i := 0; i < sliceSize; i += GITHUB_SEARCH_REPO_COUNT_PER_ONCE {
@@ -84,16 +84,14 @@ func (s *YarnStrategy) Diagnose(r parser_io.ReadSeekerAt, year int) map[string]D
 	return diagnoses
 }
 
-func (s *YarnStrategy) getNameWithOwners(r parser_io.ReadSeekerAt) []github.NameWithOwner {
+func (d *YarnDoctor) NameWithOwners(r parser_io.ReadSeekerAt) []github.NameWithOwner {
 	var nameWithOwners []github.NameWithOwner
 	libs, _, _ := yarn.NewParser().Parse(r)
 
 	for _, lib := range libs {
 		fmt.Printf("%s\n", lib.Name)
 
-		githubUrl := FetchFromNodejs(lib.Name)
-		repo, err := github.ParseGitHubUrl(githubUrl)
-
+		githubUrl, err := d.fetchURLFromRepository(lib.Name)
 		if err != nil {
 			nameWithOwners = append(nameWithOwners,
 				github.NameWithOwner{
@@ -101,16 +99,28 @@ func (s *YarnStrategy) getNameWithOwners(r parser_io.ReadSeekerAt) []github.Name
 					CanSearch:   false,
 				},
 			)
-		} else {
+			continue
+		}
+
+		repo, err := github.ParseGitHubUrl(githubUrl)
+		if err != nil {
 			nameWithOwners = append(nameWithOwners,
 				github.NameWithOwner{
-					Repo:        repo.Repo,
-					Owner:       repo.Owner,
 					PackageName: lib.Name,
-					CanSearch:   true,
+					CanSearch:   false,
 				},
 			)
+			continue
 		}
+
+		nameWithOwners = append(nameWithOwners,
+			github.NameWithOwner{
+				Repo:        repo.Repo,
+				Owner:       repo.Owner,
+				PackageName: lib.Name,
+				CanSearch:   true,
+			},
+		)
 	}
 
 	return nameWithOwners

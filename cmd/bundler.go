@@ -23,39 +23,17 @@ type GemResponse struct {
 	HomepageUri   string `json:"homepage_uri"`
 }
 
-func FetchFromRubyGems(name string) (string, error) {
-	url := fmt.Sprintf(RUBYGEMS_ORG_API, name)
-	req, _ := http.NewRequest(http.MethodGet, url, nil)
-	client := new(http.Client)
-	resp, _ := client.Do(req)
-	body, _ := io.ReadAll(resp.Body)
-
-	var Gem GemResponse
-	err := json.Unmarshal(body, &Gem)
-	if err != nil {
-		return "", errors.New("error: Unknown response")
-	}
-
-	if Gem.SourceCodeUri != "" {
-		return Gem.SourceCodeUri, nil
-	} else if Gem.HomepageUri != "" {
-		return Gem.HomepageUri, nil
-	}
-
-	return "", nil
+type BundlerDoctor struct {
 }
 
-type BundlerStrategy struct {
+func NewBundlerDoctor() *BundlerDoctor {
+	return &BundlerDoctor{}
 }
 
-func NewBundlerStrategy() *BundlerStrategy {
-	return &BundlerStrategy{}
-}
-
-func (s *BundlerStrategy) Diagnose(r parser_io.ReadSeekerAt, year int) map[string]Diagnosis {
+func (b *BundlerDoctor) Diagnose(r parser_io.ReadSeekerAt, year int) map[string]Diagnosis {
 	diagnoses := make(map[string]Diagnosis)
 	slicedNameWithOwners := [][]github.NameWithOwner{}
-	nameWithOwners := s.getNameWithOwners(r)
+	nameWithOwners := b.NameWithOwners(r)
 	sliceSize := len(nameWithOwners)
 
 	for i := 0; i < sliceSize; i += GITHUB_SEARCH_REPO_COUNT_PER_ONCE {
@@ -94,7 +72,29 @@ func (s *BundlerStrategy) Diagnose(r parser_io.ReadSeekerAt, year int) map[strin
 	return diagnoses
 }
 
-func (s *BundlerStrategy) getNameWithOwners(r parser_io.ReadSeekerAt) []github.NameWithOwner {
+func (d *BundlerDoctor) fetchURLFromRepository(name string) (string, error) {
+	url := fmt.Sprintf(RUBYGEMS_ORG_API, name)
+	req, _ := http.NewRequest(http.MethodGet, url, nil)
+	client := new(http.Client)
+	resp, _ := client.Do(req)
+	body, _ := io.ReadAll(resp.Body)
+
+	var Gem GemResponse
+	err := json.Unmarshal(body, &Gem)
+	if err != nil {
+		return "", errors.New("error: Unknown response")
+	}
+
+	if Gem.SourceCodeUri != "" {
+		return Gem.SourceCodeUri, nil
+	} else if Gem.HomepageUri != "" {
+		return Gem.HomepageUri, nil
+	}
+
+	return "", nil
+}
+
+func (d *BundlerDoctor) NameWithOwners(r parser_io.ReadSeekerAt) []github.NameWithOwner {
 	var nameWithOwners []github.NameWithOwner
 	p := &bundler.Parser{}
 	libs, _, _ := p.Parse(r)
@@ -102,7 +102,7 @@ func (s *BundlerStrategy) getNameWithOwners(r parser_io.ReadSeekerAt) []github.N
 	for _, lib := range libs {
 		fmt.Printf("%s\n", lib.Name)
 
-		githubUrl, err := FetchFromRubyGems(lib.Name)
+		githubUrl, err := d.fetchURLFromRepository(lib.Name)
 		if err != nil {
 			continue
 		}
