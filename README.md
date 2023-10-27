@@ -10,10 +10,10 @@
 
 ## Support dependencies files
 
-| Language | package manager | file (e.g.) | status |
+| language | package manager | file (e.g.) | status |
 | -------- | ------------- | -- | :----: |
 | Ruby | bundler | Gemfile.lock | :heavy_check_mark: |
-| Ruby | bundler | gemspec | (soon) |
+| Ruby | bundler | rake.gemspec | (soon) |
 | JavaScript | yarn | yarn.lock | :heavy_check_mark: |
 | JavaScript | npm | package-lock.json | :heavy_check_mark: |
 | Python | pip | requirements.txt | :heavy_check_mark: |
