@@ -16,6 +16,7 @@ import (
 )
 
 const QUERY_SEPARATOR = " "
+const SEARCH_REPOS_PER_ONCE = 20
 
 type GitHubRepository struct {
 	Name            string

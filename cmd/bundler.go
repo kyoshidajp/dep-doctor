@@ -12,8 +12,6 @@ import (
 	"github.com/kyoshidajp/dep-doctor/cmd/github"
 )
 
-const GITHUB_SEARCH_REPO_COUNT_PER_ONCE = 20
-
 // https://guides.rubygems.org/rubygems-org-api/
 const RUBYGEMS_ORG_API = "https://rubygems.org/api/v1/gems/%s.json"
 
@@ -36,8 +34,8 @@ func (b *BundlerDoctor) Diagnose(r parser_io.ReadSeekerAt, year int) map[string]
 	nameWithOwners := b.NameWithOwners(r)
 	sliceSize := len(nameWithOwners)
 
-	for i := 0; i < sliceSize; i += GITHUB_SEARCH_REPO_COUNT_PER_ONCE {
-		end := i + GITHUB_SEARCH_REPO_COUNT_PER_ONCE
+	for i := 0; i < sliceSize; i += github.SEARCH_REPOS_PER_ONCE {
+		end := i + github.SEARCH_REPOS_PER_ONCE
 		if sliceSize < end {
 			end = sliceSize
 		}

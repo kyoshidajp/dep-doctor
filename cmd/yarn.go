@@ -48,8 +48,8 @@ func (d *YarnDoctor) Diagnose(r parser_io.ReadSeekerAt, year int) map[string]Dia
 	nameWithOwners := d.NameWithOwners(r)
 	sliceSize := len(nameWithOwners)
 
-	for i := 0; i < sliceSize; i += GITHUB_SEARCH_REPO_COUNT_PER_ONCE {
-		end := i + GITHUB_SEARCH_REPO_COUNT_PER_ONCE
+	for i := 0; i < sliceSize; i += github.SEARCH_REPOS_PER_ONCE {
+		end := i + github.SEARCH_REPOS_PER_ONCE
 		if sliceSize < end {
 			end = sliceSize
 		}
