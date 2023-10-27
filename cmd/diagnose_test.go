@@ -14,6 +14,7 @@ func TestDiagnose(t *testing.T) {
 			Name:      "faker",
 			Url:       "https://github.com/faker-ruby/faker",
 			Archived:  false,
+			Ignored:   false,
 			Diagnosed: true,
 			IsActive:  true,
 		},
@@ -21,6 +22,7 @@ func TestDiagnose(t *testing.T) {
 			Name:      "concurrent-ruby",
 			Url:       "https://github.com/ruby-concurrency/concurrent-ruby",
 			Archived:  false,
+			Ignored:   false,
 			Diagnosed: true,
 			IsActive:  true,
 		},
@@ -28,6 +30,7 @@ func TestDiagnose(t *testing.T) {
 			Name:      "i18n",
 			Url:       "https://github.com/ruby-i18n/i18n",
 			Archived:  false,
+			Ignored:   true,
 			Diagnosed: true,
 			IsActive:  true,
 		},
@@ -35,6 +38,7 @@ func TestDiagnose(t *testing.T) {
 			Name:      "method_source",
 			Url:       "https://github.com/banister/method_source",
 			Archived:  false,
+			Ignored:   false,
 			Diagnosed: true,
 			IsActive:  true,
 		},
@@ -42,6 +46,7 @@ func TestDiagnose(t *testing.T) {
 			Name:      "paperclip",
 			Url:       "https://github.com/thoughtbot/paperclip",
 			Archived:  true,
+			Ignored:   false,
 			Diagnosed: true,
 			IsActive:  false,
 		},
@@ -49,6 +54,7 @@ func TestDiagnose(t *testing.T) {
 			Name:      "dotenv",
 			Url:       "https://github.com/bkeepers/dotenv",
 			Archived:  false,
+			Ignored:   false,
 			Diagnosed: true,
 			IsActive:  true,
 		},
@@ -60,7 +66,8 @@ func TestDiagnose(t *testing.T) {
 		defer f.Close()
 
 		doctor := NewDepartment(NewBundlerDoctor())
-		diagnoses := doctor.Diagnose(f, 2)
+		ignores := []string{"i18n"}
+		diagnoses := doctor.Diagnose(f, 2, ignores)
 		assert.Equal(t, expect, diagnoses)
 	})
 }

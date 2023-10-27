@@ -15,7 +15,7 @@ func NewNPMDoctor() *NPMDoctor {
 	return &NPMDoctor{}
 }
 
-func (d *NPMDoctor) Diagnose(r parser_io.ReadSeekerAt, year int) map[string]Diagnosis {
+func (d *NPMDoctor) Diagnose(r parser_io.ReadSeekerAt, year int, ignores []string) map[string]Diagnosis {
 	diagnoses := make(map[string]Diagnosis)
 	slicedNameWithOwners := [][]github.NameWithOwner{}
 	nameWithOwners := d.NameWithOwners(r)

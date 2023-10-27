@@ -15,7 +15,7 @@ func NewYarnDoctor() *YarnDoctor {
 	return &YarnDoctor{}
 }
 
-func (d *YarnDoctor) Diagnose(r parser_io.ReadSeekerAt, year int) map[string]Diagnosis {
+func (d *YarnDoctor) Diagnose(r parser_io.ReadSeekerAt, year int, ignores []string) map[string]Diagnosis {
 	diagnoses := make(map[string]Diagnosis)
 	slicedNameWithOwners := [][]github.NameWithOwner{}
 	nameWithOwners := d.NameWithOwners(r)
