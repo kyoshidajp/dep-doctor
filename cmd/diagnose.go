@@ -80,7 +80,6 @@ var diagnoseCmd = &cobra.Command{
 			_ = f.Close()
 		}()
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
 			m := fmt.Sprintf("Can't open: %s.", o.lockFilePath)
 			log.Fatal(m)
 		}
