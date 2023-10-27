@@ -49,6 +49,7 @@ type Options struct {
 	packageManager string
 	lockFilePath   string
 	ignores        string
+	year           int
 }
 
 func (o *Options) Ignores() []string {
@@ -91,7 +92,7 @@ var diagnoseCmd = &cobra.Command{
 		}
 
 		department := NewDepartment(doctor)
-		diagnoses := department.Diagnose(f, MAX_YEAR_TO_BE_BLANK, o.Ignores())
+		diagnoses := department.Diagnose(f, o.year, o.Ignores())
 		if err := Report(diagnoses); err != nil {
 			os.Exit(1)
 		}
@@ -103,6 +104,7 @@ func init() {
 	diagnoseCmd.Flags().StringVarP(&o.packageManager, "package", "p", "bundler", "package manager")
 	diagnoseCmd.Flags().StringVarP(&o.lockFilePath, "lock_file", "f", "Gemfile.lock", "lock file path")
 	diagnoseCmd.Flags().StringVarP(&o.ignores, "ignores", "i", "", "ignore dependencies")
+	diagnoseCmd.Flags().IntVarP(&o.year, "year", "y", MAX_YEAR_TO_BE_BLANK, "max years of inactivity")
 }
 
 func Report(diagnoses map[string]Diagnosis) error {
