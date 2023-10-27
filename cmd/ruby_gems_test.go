@@ -7,14 +7,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestYarnDoctor_fetchURLFromRepository(t *testing.T) {
+func TestRubyGems_fetchURLFromRepository(t *testing.T) {
 	tests := []struct {
 		name     string
 		gem_name string
 	}{
 		{
 			name:     "source_code_uri exists",
-			gem_name: "react",
+			gem_name: "rails",
+		},
+		{
+			name:     "no source_code_uri, but homepage_uri exists",
+			gem_name: "minitest",
 		},
 	}
 	expects := []struct {
@@ -23,14 +27,18 @@ func TestYarnDoctor_fetchURLFromRepository(t *testing.T) {
 	}{
 		{
 			name: "source_code_uri exists",
-			url:  "git+https://github.com/facebook/react",
+			url:  "https://github.com/rails/rails",
+		},
+		{
+			name: "no source_code_uri, but homepage_uri exists",
+			url:  "https://github.com/minitest/minitest",
 		},
 	}
 
 	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := YarnDoctor{}
-			r, _ := s.fetchURLFromRepository(tt.gem_name)
+			g := RubyGems{}
+			r, _ := g.fetchURLFromRegistry(tt.gem_name)
 			expect := expects[i]
 			assert.Equal(t, true, strings.HasPrefix(r, expect.url))
 		})

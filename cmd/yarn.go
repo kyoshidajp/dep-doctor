@@ -1,45 +1,18 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 
 	parser_io "github.com/aquasecurity/go-dep-parser/pkg/io"
 	"github.com/aquasecurity/go-dep-parser/pkg/nodejs/yarn"
 	"github.com/kyoshidajp/dep-doctor/cmd/github"
 )
 
-const NODEJS_REGISTRY_API = "https://registry.npmjs.org/%s"
-
-type NodejsRegistryResponse struct {
-	Repository struct {
-		Url string `json:"url"`
-	}
-}
-
 type YarnDoctor struct {
 }
 
 func NewYarnDoctor() *YarnDoctor {
 	return &YarnDoctor{}
-}
-
-func (d *YarnDoctor) fetchURLFromRepository(name string) (string, error) {
-	url := fmt.Sprintf(NODEJS_REGISTRY_API, name)
-	req, _ := http.NewRequest(http.MethodGet, url, nil)
-	client := new(http.Client)
-	resp, _ := client.Do(req)
-	body, _ := io.ReadAll(resp.Body)
-
-	var NodejsRegistryResponse NodejsRegistryResponse
-	err := json.Unmarshal(body, &NodejsRegistryResponse)
-	if err != nil {
-		return "", nil
-	}
-
-	return NodejsRegistryResponse.Repository.Url, nil
 }
 
 func (d *YarnDoctor) Diagnose(r parser_io.ReadSeekerAt, year int) map[string]Diagnosis {
@@ -88,10 +61,11 @@ func (d *YarnDoctor) NameWithOwners(r parser_io.ReadSeekerAt) []github.NameWithO
 	var nameWithOwners []github.NameWithOwner
 	libs, _, _ := yarn.NewParser().Parse(r)
 
+	nodejs := Nodejs{}
 	for _, lib := range libs {
 		fmt.Printf("%s\n", lib.Name)
 
-		githubUrl, err := d.fetchURLFromRepository(lib.Name)
+		githubUrl, err := nodejs.fetchURLFromRegistry(lib.Name)
 		if err != nil {
 			nameWithOwners = append(nameWithOwners,
 				github.NameWithOwner{

@@ -1,53 +1,18 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 
 	parser_io "github.com/aquasecurity/go-dep-parser/pkg/io"
 	"github.com/aquasecurity/go-dep-parser/pkg/python/pip"
 	"github.com/kyoshidajp/dep-doctor/cmd/github"
 )
 
-// https://warehouse.pypa.io/api-reference/json.html
-const PYPI_REGISTRY_API = "https://pypi.org/pypi/%s/json"
-
-type PipRegistryResponse struct {
-	Info struct {
-		ProjectUrls struct {
-			SourceCode string `json:"Source Code"`
-			Source     string `json:"Source"`
-		} `json:"project_urls"`
-	} `json:"info"`
-}
-
 type PipDoctor struct {
 }
 
 func NewPipDoctor() *PipDoctor {
 	return &PipDoctor{}
-}
-
-func (d *PipDoctor) fetchURLFromRepository(name string) (string, error) {
-	url := fmt.Sprintf(PYPI_REGISTRY_API, name)
-	req, _ := http.NewRequest(http.MethodGet, url, nil)
-	client := new(http.Client)
-	resp, _ := client.Do(req)
-	body, _ := io.ReadAll(resp.Body)
-
-	var PipRegistryResponse PipRegistryResponse
-	err := json.Unmarshal(body, &PipRegistryResponse)
-	if err != nil {
-		return "", nil
-	}
-
-	if PipRegistryResponse.Info.ProjectUrls.SourceCode != "" {
-		return PipRegistryResponse.Info.ProjectUrls.SourceCode, nil
-	}
-
-	return PipRegistryResponse.Info.ProjectUrls.Source, nil
 }
 
 func (d *PipDoctor) Diagnose(r parser_io.ReadSeekerAt, year int) map[string]Diagnosis {
@@ -96,10 +61,11 @@ func (d *PipDoctor) NameWithOwners(r parser_io.ReadSeekerAt) []github.NameWithOw
 	var nameWithOwners []github.NameWithOwner
 	libs, _, _ := pip.NewParser().Parse(r)
 
+	pypi := Pypi{}
 	for _, lib := range libs {
 		fmt.Printf("%s\n", lib.Name)
 
-		githubUrl, err := d.fetchURLFromRepository(lib.Name)
+		githubUrl, err := pypi.fetchURLFromRepository(lib.Name)
 		if err != nil {
 			nameWithOwners = append(nameWithOwners,
 				github.NameWithOwner{

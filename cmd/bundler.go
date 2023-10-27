@@ -1,25 +1,12 @@
 package cmd
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
-	"net/http"
 
 	parser_io "github.com/aquasecurity/go-dep-parser/pkg/io"
 	"github.com/aquasecurity/go-dep-parser/pkg/ruby/bundler"
 	"github.com/kyoshidajp/dep-doctor/cmd/github"
 )
-
-// https://guides.rubygems.org/rubygems-org-api/
-const RUBYGEMS_ORG_API = "https://rubygems.org/api/v1/gems/%s.json"
-
-type GemResponse struct {
-	Name          string `json:"name"`
-	SourceCodeUri string `json:"source_code_uri"`
-	HomepageUri   string `json:"homepage_uri"`
-}
 
 type BundlerDoctor struct {
 }
@@ -70,37 +57,16 @@ func (b *BundlerDoctor) Diagnose(r parser_io.ReadSeekerAt, year int) map[string]
 	return diagnoses
 }
 
-func (d *BundlerDoctor) fetchURLFromRepository(name string) (string, error) {
-	url := fmt.Sprintf(RUBYGEMS_ORG_API, name)
-	req, _ := http.NewRequest(http.MethodGet, url, nil)
-	client := new(http.Client)
-	resp, _ := client.Do(req)
-	body, _ := io.ReadAll(resp.Body)
-
-	var Gem GemResponse
-	err := json.Unmarshal(body, &Gem)
-	if err != nil {
-		return "", errors.New("error: Unknown response")
-	}
-
-	if Gem.SourceCodeUri != "" {
-		return Gem.SourceCodeUri, nil
-	} else if Gem.HomepageUri != "" {
-		return Gem.HomepageUri, nil
-	}
-
-	return "", nil
-}
-
 func (d *BundlerDoctor) NameWithOwners(r parser_io.ReadSeekerAt) []github.NameWithOwner {
 	var nameWithOwners []github.NameWithOwner
 	p := &bundler.Parser{}
 	libs, _, _ := p.Parse(r)
 
+	rubyGems := RubyGems{}
 	for _, lib := range libs {
 		fmt.Printf("%s\n", lib.Name)
 
-		githubUrl, err := d.fetchURLFromRepository(lib.Name)
+		githubUrl, err := rubyGems.fetchURLFromRegistry(lib.Name)
 		if err != nil {
 			continue
 		}
