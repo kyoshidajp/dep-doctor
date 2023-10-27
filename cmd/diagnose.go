@@ -18,7 +18,7 @@ import (
 const MAX_YEAR_TO_BE_BLANK = 5
 
 type Doctor interface {
-	Diagnose(r io.ReadSeekerAt, year int) map[string]Diagnosis
+	Diagnose(r io.ReadSeekerAt, year int, ignores []string) map[string]Diagnosis
 	NameWithOwners(r parser_io.ReadSeekerAt) []github.NameWithOwner
 }
 
@@ -26,6 +26,7 @@ type Diagnosis struct {
 	Name      string
 	Url       string
 	Archived  bool
+	Ignored   bool
 	Diagnosed bool
 	IsActive  bool
 }
@@ -40,13 +41,18 @@ func NewDepartment(d Doctor) *Department {
 	}
 }
 
-func (d *Department) Diagnose(r io.ReadSeekCloserAt, year int) map[string]Diagnosis {
-	return d.doctor.Diagnose(r, year)
+func (d *Department) Diagnose(r io.ReadSeekCloserAt, year int, ignores []string) map[string]Diagnosis {
+	return d.doctor.Diagnose(r, year, ignores)
 }
 
 type Options struct {
 	packageManager string
 	lockFilePath   string
+	ignores        string
+}
+
+func (o *Options) Ignores() []string {
+	return strings.Split(o.ignores, " ")
 }
 
 var (
@@ -85,7 +91,7 @@ var diagnoseCmd = &cobra.Command{
 		}
 
 		department := NewDepartment(doctor)
-		diagnoses := department.Diagnose(f, MAX_YEAR_TO_BE_BLANK)
+		diagnoses := department.Diagnose(f, MAX_YEAR_TO_BE_BLANK, o.Ignores())
 		if err := Report(diagnoses); err != nil {
 			os.Exit(1)
 		}
@@ -96,14 +102,23 @@ func init() {
 	rootCmd.AddCommand(diagnoseCmd)
 	diagnoseCmd.Flags().StringVarP(&o.packageManager, "package", "p", "bundler", "package manager")
 	diagnoseCmd.Flags().StringVarP(&o.lockFilePath, "lock_file", "f", "Gemfile.lock", "lock file path")
+	diagnoseCmd.Flags().StringVarP(&o.ignores, "ignores", "i", "", "ignore dependencies")
 }
 
 func Report(diagnoses map[string]Diagnosis) error {
 	errMessages := []string{}
 	warnMessages := []string{}
+	ignoredMessages := []string{}
 	errCount := 0
 	unDiagnosedCount := 0
+	ignoredCount := 0
 	for _, diagnosis := range diagnoses {
+		if diagnosis.Ignored {
+			ignoredMessages = append(ignoredMessages, fmt.Sprintf("[info] %s (ignored):", diagnosis.Name))
+			ignoredCount += 1
+			continue
+		}
+
 		if !diagnosis.Diagnosed {
 			warnMessages = append(warnMessages, fmt.Sprintf("[warn] %s (unknown):", diagnosis.Name))
 			unDiagnosedCount += 1
@@ -120,6 +135,9 @@ func Report(diagnoses map[string]Diagnosis) error {
 	}
 
 	fmt.Printf("\n")
+	if len(ignoredMessages) > 0 {
+		fmt.Println(strings.Join(ignoredMessages, "\n"))
+	}
 	if len(warnMessages) > 0 {
 		color.Yellow(strings.Join(warnMessages, "\n"))
 	}
@@ -129,10 +147,11 @@ func Report(diagnoses map[string]Diagnosis) error {
 
 	color.Green(heredoc.Docf(`
 		Diagnose complete! %d dependencies.
-		%d error, %d unknown`,
+		%d error, %d unknown, %d ignored`,
 		len(diagnoses),
 		errCount,
-		unDiagnosedCount),
+		unDiagnosedCount,
+		ignoredCount),
 	)
 
 	if len(errMessages) > 0 {

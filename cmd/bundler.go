@@ -6,6 +6,7 @@ import (
 	parser_io "github.com/aquasecurity/go-dep-parser/pkg/io"
 	"github.com/aquasecurity/go-dep-parser/pkg/ruby/bundler"
 	"github.com/kyoshidajp/dep-doctor/cmd/github"
+	"golang.org/x/exp/slices"
 )
 
 type BundlerDoctor struct {
@@ -15,7 +16,7 @@ func NewBundlerDoctor() *BundlerDoctor {
 	return &BundlerDoctor{}
 }
 
-func (b *BundlerDoctor) Diagnose(r parser_io.ReadSeekerAt, year int) map[string]Diagnosis {
+func (b *BundlerDoctor) Diagnose(r parser_io.ReadSeekerAt, year int, ignores []string) map[string]Diagnosis {
 	diagnoses := make(map[string]Diagnosis)
 	slicedNameWithOwners := [][]github.NameWithOwner{}
 	nameWithOwners := b.NameWithOwners(r)
@@ -32,10 +33,12 @@ func (b *BundlerDoctor) Diagnose(r parser_io.ReadSeekerAt, year int) map[string]
 	for _, nameWithOwners := range slicedNameWithOwners {
 		repos := github.FetchFromGitHub(nameWithOwners)
 		for _, r := range repos {
+			isIgnore := slices.Contains(ignores, r.Name)
 			diagnosis := Diagnosis{
 				Name:      r.Name,
 				Url:       r.Url,
 				Archived:  r.Archived,
+				Ignored:   isIgnore,
 				Diagnosed: true,
 				IsActive:  r.IsActive(year),
 			}
