@@ -15,7 +15,7 @@
 | Ruby | bundler | Gemfile.lock | :heavy_check_mark: |
 | Ruby | bundler | gemspec | (soon) |
 | JavaScript | yarn | yarn.lock | :heavy_check_mark: |
-| JavaScript | npm | package.json | (soon) |
+| JavaScript | npm | package-lock.json | :heavy_check_mark: |
 | Python | pip | requirements.txt | :heavy_check_mark: |
 | Go | | go.sum | (soon) |
 
