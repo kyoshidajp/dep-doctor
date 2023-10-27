@@ -19,7 +19,6 @@ const MAX_YEAR_TO_BE_BLANK = 5
 
 type Doctor interface {
 	Diagnose(r io.ReadSeekerAt, year int) map[string]Diagnosis
-	fetchURLFromRepository(name string) (string, error)
 	NameWithOwners(r parser_io.ReadSeekerAt) []github.NameWithOwner
 }
 
@@ -80,7 +79,6 @@ var diagnoseCmd = &cobra.Command{
 			_ = f.Close()
 		}()
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
 			m := fmt.Sprintf("Can't open: %s.", o.lockFilePath)
 			log.Fatal(m)
 		}

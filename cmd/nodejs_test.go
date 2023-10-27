@@ -7,18 +7,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestBundlerDoctor_fetchURLFromRepository(t *testing.T) {
+func TestNodejs_fetchURLFromRegistry(t *testing.T) {
 	tests := []struct {
 		name     string
 		gem_name string
 	}{
 		{
 			name:     "source_code_uri exists",
-			gem_name: "rails",
-		},
-		{
-			name:     "no source_code_uri, but homepage_uri exists",
-			gem_name: "minitest",
+			gem_name: "react",
 		},
 	}
 	expects := []struct {
@@ -27,18 +23,14 @@ func TestBundlerDoctor_fetchURLFromRepository(t *testing.T) {
 	}{
 		{
 			name: "source_code_uri exists",
-			url:  "https://github.com/rails/rails",
-		},
-		{
-			name: "no source_code_uri, but homepage_uri exists",
-			url:  "https://github.com/minitest/minitest",
+			url:  "git+https://github.com/facebook/react",
 		},
 	}
 
 	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := BundlerDoctor{}
-			r, _ := s.fetchURLFromRepository(tt.gem_name)
+			n := Nodejs{}
+			r, _ := n.fetchURLFromRegistry(tt.gem_name)
 			expect := expects[i]
 			assert.Equal(t, true, strings.HasPrefix(r, expect.url))
 		})

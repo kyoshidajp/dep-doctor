@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPyPiDoctor_fetchURLFromRepository(t *testing.T) {
+func TestPyPi_fetchURLFromRegistry(t *testing.T) {
 	tests := []struct {
 		name     string
 		gem_name string
@@ -28,8 +28,8 @@ func TestPyPiDoctor_fetchURLFromRepository(t *testing.T) {
 
 	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := PipDoctor{}
-			r, _ := s.fetchURLFromRepository(tt.gem_name)
+			p := Pypi{}
+			r, _ := p.fetchURLFromRepository(tt.gem_name)
 			expect := expects[i]
 			assert.Equal(t, expect.url, r)
 		})
