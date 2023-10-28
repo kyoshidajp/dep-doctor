@@ -16,22 +16,22 @@ func NewBundlerDoctor() *BundlerDoctor {
 	return &BundlerDoctor{}
 }
 
-func (b *BundlerDoctor) Diagnose(r parser_io.ReadSeekerAt, year int, ignores []string) map[string]Diagnosis {
+func (d *BundlerDoctor) Diagnose(r parser_io.ReadSeekerAt, year int, ignores []string) map[string]Diagnosis {
 	diagnoses := make(map[string]Diagnosis)
-	slicedNameWithOwners := [][]github.NameWithOwner{}
-	nameWithOwners := b.NameWithOwners(r)
-	sliceSize := len(nameWithOwners)
+	slicedParams := [][]github.FetchRepositoryParam{}
+	fetchRepositoryParams := d.FetchRepositoryParams(r)
+	sliceSize := len(fetchRepositoryParams)
 
 	for i := 0; i < sliceSize; i += github.SEARCH_REPOS_PER_ONCE {
 		end := i + github.SEARCH_REPOS_PER_ONCE
 		if sliceSize < end {
 			end = sliceSize
 		}
-		slicedNameWithOwners = append(slicedNameWithOwners, nameWithOwners[i:end])
+		slicedParams = append(slicedParams, fetchRepositoryParams[i:end])
 	}
 
-	for _, nameWithOwners := range slicedNameWithOwners {
-		repos := github.FetchFromGitHub(nameWithOwners)
+	for _, param := range slicedParams {
+		repos := github.FetchFromGitHub(param)
 		for _, r := range repos {
 			isIgnore := slices.Contains(ignores, r.Name)
 			diagnosis := Diagnosis{
@@ -46,22 +46,22 @@ func (b *BundlerDoctor) Diagnose(r parser_io.ReadSeekerAt, year int, ignores []s
 		}
 	}
 
-	for _, nameWithOwner := range nameWithOwners {
-		if nameWithOwner.CanSearch {
+	for _, fetchRepositoryParam := range fetchRepositoryParams {
+		if fetchRepositoryParam.CanSearch {
 			continue
 		}
 
 		diagnosis := Diagnosis{
-			Name:      nameWithOwner.PackageName,
+			Name:      fetchRepositoryParam.PackageName,
 			Diagnosed: false,
 		}
-		diagnoses[nameWithOwner.PackageName] = diagnosis
+		diagnoses[fetchRepositoryParam.PackageName] = diagnosis
 	}
 	return diagnoses
 }
 
-func (d *BundlerDoctor) NameWithOwners(r parser_io.ReadSeekerAt) []github.NameWithOwner {
-	var nameWithOwners []github.NameWithOwner
+func (d *BundlerDoctor) FetchRepositoryParams(r parser_io.ReadSeekerAt) []github.FetchRepositoryParam {
+	var params []github.FetchRepositoryParam
 	p := &bundler.Parser{}
 	libs, _, _ := p.Parse(r)
 
@@ -75,25 +75,25 @@ func (d *BundlerDoctor) NameWithOwners(r parser_io.ReadSeekerAt) []github.NameWi
 		}
 
 		repo, err := github.ParseGitHubUrl(githubUrl)
-
 		if err != nil {
-			nameWithOwners = append(nameWithOwners,
-				github.NameWithOwner{
+			params = append(params,
+				github.FetchRepositoryParam{
 					PackageName: lib.Name,
 					CanSearch:   false,
 				},
 			)
-		} else {
-			nameWithOwners = append(nameWithOwners,
-				github.NameWithOwner{
-					Repo:        repo.Repo,
-					Owner:       repo.Owner,
-					PackageName: lib.Name,
-					CanSearch:   true,
-				},
-			)
+			continue
 		}
+
+		params = append(params,
+			github.FetchRepositoryParam{
+				Repo:        repo.Repo,
+				Owner:       repo.Owner,
+				PackageName: lib.Name,
+				CanSearch:   true,
+			},
+		)
 	}
 
-	return nameWithOwners
+	return params
 }

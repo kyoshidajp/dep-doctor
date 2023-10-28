@@ -17,6 +17,7 @@ import (
 
 const QUERY_SEPARATOR = " "
 const SEARCH_REPOS_PER_ONCE = 20
+const TOKEN_NAME = "GITHUB_TOKEN"
 
 type GitHubRepository struct {
 	Name            string
@@ -33,14 +34,14 @@ func (r GitHubRepository) IsActive(year int) bool {
 	return targetDate.After(now)
 }
 
-type NameWithOwner struct {
+type FetchRepositoryParam struct {
 	PackageName string
 	Repo        string
 	Owner       string
 	CanSearch   bool
 }
 
-func (n NameWithOwner) GetName() string {
+func (n FetchRepositoryParam) QueryWord() string {
 	return fmt.Sprintf("repo:%s/%s", n.Owner, n.Repo)
 }
 
@@ -96,10 +97,11 @@ func ParseGitHubUrl(url string) (GitHubRepository, error) {
 	}, nil
 }
 
-func FetchFromGitHub(nameWithOwners []NameWithOwner) []GitHubRepository {
-	token := os.Getenv("GITHUB_TOKEN")
+func FetchFromGitHub(params []FetchRepositoryParam) []GitHubRepository {
+	token := os.Getenv(TOKEN_NAME)
 	if len(token) == 0 {
-		log.Fatal("env var `GITHUB_TOKEN` is not found")
+		m := fmt.Sprintf("Environment variable `%s` is not found.", TOKEN_NAME)
+		log.Fatal(m)
 	}
 
 	src := oauth2.StaticTokenSource(
@@ -136,9 +138,9 @@ func FetchFromGitHub(nameWithOwners []NameWithOwner) []GitHubRepository {
 		} `graphql:"search(query:$query, first:$count, type:REPOSITORY)"`
 	}
 
-	names := make([]string, len(nameWithOwners))
-	for i, n := range nameWithOwners {
-		names[i] = n.GetName()
+	names := make([]string, len(params))
+	for i, param := range params {
+		names[i] = param.QueryWord()
 	}
 	q := strings.Join(names, QUERY_SEPARATOR)
 	variables := map[string]interface{}{
@@ -153,12 +155,14 @@ func FetchFromGitHub(nameWithOwners []NameWithOwner) []GitHubRepository {
 	}
 
 	for _, node := range query.Search.Nodes {
+		nodeRepo := node.Repository
+		lastCommit := nodeRepo.DefaultBranchRef.Target.Commit.History.Edges[0].Node
 		repos = append(repos, GitHubRepository{
-			Repo:            string(node.Repository.NameWithOwner),
-			Archived:        bool(node.Repository.IsArchived),
-			Url:             string(node.Repository.Url),
-			Name:            string(node.Repository.Name),
-			LastCommittedAt: time.Time(node.Repository.DefaultBranchRef.Target.Commit.History.Edges[0].Node.CommittedDate.Time),
+			Repo:            string(nodeRepo.NameWithOwner),
+			Archived:        bool(nodeRepo.IsArchived),
+			Url:             string(nodeRepo.Url),
+			Name:            string(nodeRepo.Name),
+			LastCommittedAt: time.Time(lastCommit.CommittedDate.Time),
 		})
 	}
 

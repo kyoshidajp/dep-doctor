@@ -17,20 +17,20 @@ func NewYarnDoctor() *YarnDoctor {
 
 func (d *YarnDoctor) Diagnose(r parser_io.ReadSeekerAt, year int, ignores []string) map[string]Diagnosis {
 	diagnoses := make(map[string]Diagnosis)
-	slicedNameWithOwners := [][]github.NameWithOwner{}
-	nameWithOwners := d.NameWithOwners(r)
-	sliceSize := len(nameWithOwners)
+	slicedParams := [][]github.FetchRepositoryParam{}
+	params := d.FetchRepositoryParams(r)
+	sliceSize := len(slicedParams)
 
 	for i := 0; i < sliceSize; i += github.SEARCH_REPOS_PER_ONCE {
 		end := i + github.SEARCH_REPOS_PER_ONCE
 		if sliceSize < end {
 			end = sliceSize
 		}
-		slicedNameWithOwners = append(slicedNameWithOwners, nameWithOwners[i:end])
+		slicedParams = append(slicedParams, params[i:end])
 	}
 
-	for _, nameWithOwners := range slicedNameWithOwners {
-		repos := github.FetchFromGitHub(nameWithOwners)
+	for _, slicedParam := range slicedParams {
+		repos := github.FetchFromGitHub(slicedParam)
 		for _, r := range repos {
 			diagnosis := Diagnosis{
 				Name:      r.Name,
@@ -43,22 +43,22 @@ func (d *YarnDoctor) Diagnose(r parser_io.ReadSeekerAt, year int, ignores []stri
 		}
 	}
 
-	for _, nameWithOwner := range nameWithOwners {
-		if nameWithOwner.CanSearch {
+	for _, param := range params {
+		if param.CanSearch {
 			continue
 		}
 
 		diagnosis := Diagnosis{
-			Name:      nameWithOwner.PackageName,
+			Name:      param.PackageName,
 			Diagnosed: false,
 		}
-		diagnoses[nameWithOwner.PackageName] = diagnosis
+		diagnoses[param.PackageName] = diagnosis
 	}
 	return diagnoses
 }
 
-func (d *YarnDoctor) NameWithOwners(r parser_io.ReadSeekerAt) []github.NameWithOwner {
-	var nameWithOwners []github.NameWithOwner
+func (d *YarnDoctor) FetchRepositoryParams(r parser_io.ReadSeekerAt) []github.FetchRepositoryParam {
+	var params []github.FetchRepositoryParam
 	libs, _, _ := yarn.NewParser().Parse(r)
 
 	nodejs := Nodejs{}
@@ -67,8 +67,8 @@ func (d *YarnDoctor) NameWithOwners(r parser_io.ReadSeekerAt) []github.NameWithO
 
 		githubUrl, err := nodejs.fetchURLFromRegistry(lib.Name)
 		if err != nil {
-			nameWithOwners = append(nameWithOwners,
-				github.NameWithOwner{
+			params = append(params,
+				github.FetchRepositoryParam{
 					PackageName: lib.Name,
 					CanSearch:   false,
 				},
@@ -78,8 +78,8 @@ func (d *YarnDoctor) NameWithOwners(r parser_io.ReadSeekerAt) []github.NameWithO
 
 		repo, err := github.ParseGitHubUrl(githubUrl)
 		if err != nil {
-			nameWithOwners = append(nameWithOwners,
-				github.NameWithOwner{
+			params = append(params,
+				github.FetchRepositoryParam{
 					PackageName: lib.Name,
 					CanSearch:   false,
 				},
@@ -87,8 +87,8 @@ func (d *YarnDoctor) NameWithOwners(r parser_io.ReadSeekerAt) []github.NameWithO
 			continue
 		}
 
-		nameWithOwners = append(nameWithOwners,
-			github.NameWithOwner{
+		params = append(params,
+			github.FetchRepositoryParam{
 				Repo:        repo.Repo,
 				Owner:       repo.Owner,
 				PackageName: lib.Name,
@@ -97,5 +97,5 @@ func (d *YarnDoctor) NameWithOwners(r parser_io.ReadSeekerAt) []github.NameWithO
 		)
 	}
 
-	return nameWithOwners
+	return params
 }

@@ -19,7 +19,7 @@ const MAX_YEAR_TO_BE_BLANK = 5
 
 type Doctor interface {
 	Diagnose(r io.ReadSeekerAt, year int, ignores []string) map[string]Diagnosis
-	NameWithOwners(r parser_io.ReadSeekerAt) []github.NameWithOwner
+	FetchRepositoryParams(r parser_io.ReadSeekerAt) []github.FetchRepositoryParam
 }
 
 type Diagnosis struct {
