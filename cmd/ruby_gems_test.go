@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRubyGems_fetchURLFromRepository(t *testing.T) {
+func TestRubyGems_fetchURLFromRegistry(t *testing.T) {
 	tests := []struct {
 		name     string
 		gem_name string

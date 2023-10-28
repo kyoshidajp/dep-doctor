@@ -24,7 +24,7 @@ type Pypi struct {
 	name string
 }
 
-func (p *Pypi) fetchURLFromRepository(client http.Client) (string, error) {
+func (p *Pypi) fetchURLFromRegistry(client http.Client) (string, error) {
 	url := fmt.Sprintf(PYPI_REGISTRY_API, p.name)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {

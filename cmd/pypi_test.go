@@ -30,7 +30,7 @@ func TestPyPi_fetchURLFromRegistry(t *testing.T) {
 	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := Pypi{name: tt.dep_name}
-			r, _ := p.fetchURLFromRepository(http.Client{})
+			r, _ := p.fetchURLFromRegistry(http.Client{})
 			expect := expects[i]
 			assert.Equal(t, expect.url, r)
 		})
