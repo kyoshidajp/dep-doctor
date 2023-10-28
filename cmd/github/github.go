@@ -17,6 +17,7 @@ import (
 
 const QUERY_SEPARATOR = " "
 const SEARCH_REPOS_PER_ONCE = 20
+const TOKEN_NAME = "GITHUB_TOKEN"
 
 type GitHubRepository struct {
 	Name            string
@@ -97,9 +98,10 @@ func ParseGitHubUrl(url string) (GitHubRepository, error) {
 }
 
 func FetchFromGitHub(params []FetchRepositoryParam) []GitHubRepository {
-	token := os.Getenv("GITHUB_TOKEN")
+	token := os.Getenv(TOKEN_NAME)
 	if len(token) == 0 {
-		log.Fatal("env var `GITHUB_TOKEN` is not found")
+		m := fmt.Sprintf("Environment variable `%s` is not found.", TOKEN_NAME)
+		log.Fatal(m)
 	}
 
 	src := oauth2.StaticTokenSource(
