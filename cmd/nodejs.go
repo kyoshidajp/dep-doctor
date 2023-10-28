@@ -20,10 +20,9 @@ type Nodejs struct {
 	name string
 }
 
-func (n *Nodejs) fetchURLFromRegistry() (string, error) {
+func (n *Nodejs) fetchURLFromRegistry(client http.Client) (string, error) {
 	url := fmt.Sprintf(NODEJS_REGISTRY_API, n.name)
 	req, _ := http.NewRequest(http.MethodGet, url, nil)
-	client := new(http.Client)
 	resp, _ := client.Do(req)
 	body, _ := io.ReadAll(resp.Body)
 

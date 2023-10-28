@@ -1,16 +1,20 @@
 package cmd
 
 import (
+	"net/http"
+
 	parser_io "github.com/aquasecurity/go-dep-parser/pkg/io"
 	"github.com/aquasecurity/go-dep-parser/pkg/python/pip"
 	"github.com/aquasecurity/go-dep-parser/pkg/types"
 )
 
 type PipDoctor struct {
+	HTTPClient http.Client
 }
 
 func NewPipDoctor() *PipDoctor {
-	return &PipDoctor{}
+	client := &http.Client{}
+	return &PipDoctor{HTTPClient: *client}
 }
 
 func (d *PipDoctor) Deps(r parser_io.ReadSeekerAt) []types.Library {
@@ -21,6 +25,6 @@ func (d *PipDoctor) Deps(r parser_io.ReadSeekerAt) []types.Library {
 
 func (d *PipDoctor) SourceCodeURL(name string) (string, error) {
 	pypi := Pypi{name: name}
-	url, err := pypi.fetchURLFromRepository()
+	url, err := pypi.fetchURLFromRepository(d.HTTPClient)
 	return url, err
 }

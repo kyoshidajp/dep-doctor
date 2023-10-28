@@ -21,10 +21,9 @@ type RubyGems struct {
 	name string
 }
 
-func (g *RubyGems) fetchURLFromRegistry() (string, error) {
+func (g *RubyGems) fetchURLFromRegistry(client http.Client) (string, error) {
 	url := fmt.Sprintf(RUBY_GEMS_REGISTRY_API, g.name)
 	req, _ := http.NewRequest(http.MethodGet, url, nil)
-	client := new(http.Client)
 	resp, _ := client.Do(req)
 	body, _ := io.ReadAll(resp.Body)
 

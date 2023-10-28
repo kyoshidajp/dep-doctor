@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"net/http"
 	"strings"
 	"testing"
 
@@ -38,7 +39,7 @@ func TestRubyGems_fetchURLFromRepository(t *testing.T) {
 	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := RubyGems{name: tt.gem_name}
-			r, _ := g.fetchURLFromRegistry()
+			r, _ := g.fetchURLFromRegistry(http.Client{})
 			expect := expects[i]
 			assert.Equal(t, true, strings.HasPrefix(r, expect.url))
 		})
