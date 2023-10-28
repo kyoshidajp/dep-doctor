@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -25,13 +26,26 @@ type Pypi struct {
 
 func (p *Pypi) fetchURLFromRepository(client http.Client) (string, error) {
 	url := fmt.Sprintf(PYPI_REGISTRY_API, p.name)
-	req, _ := http.NewRequest(http.MethodGet, url, nil)
-	resp, _ := client.Do(req)
-	body, _ := io.ReadAll(resp.Body)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return "", err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+
 	defer resp.Body.Close()
+	if resp.StatusCode < 200 || 299 < resp.StatusCode {
+		m := fmt.Sprintf("Got status code: %d from %s", resp.StatusCode, RUBY_GEMS_REGISTRY_API)
+		return "", errors.New(m)
+	}
+
+	body, _ := io.ReadAll(resp.Body)
 
 	var PypiRegistryResponse PypiRegistryResponse
-	err := json.Unmarshal(body, &PypiRegistryResponse)
+	err = json.Unmarshal(body, &PypiRegistryResponse)
 	if err != nil {
 		return "", nil
 	}

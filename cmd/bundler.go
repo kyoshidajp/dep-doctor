@@ -13,9 +13,7 @@ type BundlerDoctor struct {
 }
 
 func NewBundlerDoctor() *BundlerDoctor {
-	t := http.DefaultTransport.(*http.Transport).Clone()
-	t.MaxIdleConnsPerHost = -1
-	client := &http.Client{Transport: t}
+	client := &http.Client{}
 	return &BundlerDoctor{HTTPClient: *client}
 }
 

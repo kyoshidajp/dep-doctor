@@ -23,15 +23,28 @@ type RubyGems struct {
 
 func (g *RubyGems) fetchURLFromRegistry(client http.Client) (string, error) {
 	url := fmt.Sprintf(RUBY_GEMS_REGISTRY_API, g.name)
-	req, _ := http.NewRequest(http.MethodGet, url, nil)
-	resp, _ := client.Do(req)
-	body, _ := io.ReadAll(resp.Body)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return "", err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+
 	defer resp.Body.Close()
+	if resp.StatusCode < 200 || 299 < resp.StatusCode {
+		m := fmt.Sprintf("Got status code: %d from %s", resp.StatusCode, RUBY_GEMS_REGISTRY_API)
+		return "", errors.New(m)
+	}
+
+	body, _ := io.ReadAll(resp.Body)
 
 	var Gem RubyGemsRegistryResponse
-	err := json.Unmarshal(body, &Gem)
+	err = json.Unmarshal(body, &Gem)
 	if err != nil {
-		return "", errors.New("error: Unknown response")
+		return "", err
 	}
 
 	if Gem.SourceCodeUri != "" {
