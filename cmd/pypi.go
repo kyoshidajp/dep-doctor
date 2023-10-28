@@ -20,10 +20,11 @@ type PypiRegistryResponse struct {
 }
 
 type Pypi struct {
+	name string
 }
 
-func (p *Pypi) fetchURLFromRepository(name string) (string, error) {
-	url := fmt.Sprintf(PYPI_REGISTRY_API, name)
+func (p *Pypi) fetchURLFromRepository() (string, error) {
+	url := fmt.Sprintf(PYPI_REGISTRY_API, p.name)
 	req, _ := http.NewRequest(http.MethodGet, url, nil)
 	client := new(http.Client)
 	resp, _ := client.Do(req)

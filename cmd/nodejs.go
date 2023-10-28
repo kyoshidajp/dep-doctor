@@ -17,10 +17,11 @@ type NodejsRegistryResponse struct {
 }
 
 type Nodejs struct {
+	name string
 }
 
-func (n *Nodejs) fetchURLFromRegistry(name string) (string, error) {
-	url := fmt.Sprintf(NODEJS_REGISTRY_API, name)
+func (n *Nodejs) fetchURLFromRegistry() (string, error) {
+	url := fmt.Sprintf(NODEJS_REGISTRY_API, n.name)
 	req, _ := http.NewRequest(http.MethodGet, url, nil)
 	client := new(http.Client)
 	resp, _ := client.Do(req)
