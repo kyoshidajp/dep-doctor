@@ -28,6 +28,7 @@ func (p *Pypi) fetchURLFromRepository(client http.Client) (string, error) {
 	req, _ := http.NewRequest(http.MethodGet, url, nil)
 	resp, _ := client.Do(req)
 	body, _ := io.ReadAll(resp.Body)
+	defer resp.Body.Close()
 
 	var PypiRegistryResponse PypiRegistryResponse
 	err := json.Unmarshal(body, &PypiRegistryResponse)

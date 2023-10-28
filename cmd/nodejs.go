@@ -25,6 +25,7 @@ func (n *Nodejs) fetchURLFromRegistry(client http.Client) (string, error) {
 	req, _ := http.NewRequest(http.MethodGet, url, nil)
 	resp, _ := client.Do(req)
 	body, _ := io.ReadAll(resp.Body)
+	defer resp.Body.Close()
 
 	var NodejsRegistryResponse NodejsRegistryResponse
 	err := json.Unmarshal(body, &NodejsRegistryResponse)
