@@ -1,16 +1,20 @@
 package cmd
 
 import (
+	"net/http"
+
 	parser_io "github.com/aquasecurity/go-dep-parser/pkg/io"
 	"github.com/aquasecurity/go-dep-parser/pkg/nodejs/yarn"
 	"github.com/aquasecurity/go-dep-parser/pkg/types"
 )
 
 type YarnDoctor struct {
+	HTTPClient http.Client
 }
 
 func NewYarnDoctor() *YarnDoctor {
-	return &YarnDoctor{}
+	client := &http.Client{}
+	return &YarnDoctor{HTTPClient: *client}
 }
 
 func (d *YarnDoctor) Deps(r parser_io.ReadSeekerAt) []types.Library {
@@ -21,6 +25,6 @@ func (d *YarnDoctor) Deps(r parser_io.ReadSeekerAt) []types.Library {
 
 func (d *YarnDoctor) SourceCodeURL(name string) (string, error) {
 	nodejs := Nodejs{name: name}
-	url, err := nodejs.fetchURLFromRegistry()
+	url, err := nodejs.fetchURLFromRegistry(d.HTTPClient)
 	return url, err
 }

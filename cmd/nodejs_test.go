@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"net/http"
 	"strings"
 	"testing"
 
@@ -30,7 +31,7 @@ func TestNodejs_fetchURLFromRegistry(t *testing.T) {
 	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			n := Nodejs{name: tt.dep_name}
-			r, _ := n.fetchURLFromRegistry()
+			r, _ := n.fetchURLFromRegistry(http.Client{})
 			expect := expects[i]
 			assert.Equal(t, true, strings.HasPrefix(r, expect.url))
 		})

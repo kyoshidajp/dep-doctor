@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/aquasecurity/go-dep-parser/pkg/io"
@@ -18,6 +19,10 @@ import (
 )
 
 const MAX_YEAR_TO_BE_BLANK = 5
+
+// referenced as the number of goroutine parallels
+// should be optimized?
+const FETCH_REPOS_PER_ONCE = 20
 
 type Diagnosis struct {
 	Name      string
@@ -35,33 +40,46 @@ type MedicalTechnician interface {
 
 func FetchRepositoryParams(libs []types.Library, g MedicalTechnician) []github.FetchRepositoryParam {
 	var params []github.FetchRepositoryParam
+	maxConcurrency := FETCH_REPOS_PER_ONCE
+	var wg sync.WaitGroup
+	sem := make(chan struct{}, maxConcurrency)
+
 	for _, lib := range libs {
-		fmt.Printf("%s\n", lib.Name)
+		wg.Add(1)
+		sem <- struct{}{}
+		go func(lib types.Library) {
+			defer wg.Done()
+			defer func() { <-sem }()
 
-		githubUrl, err := g.SourceCodeURL(lib.Name)
-		if err != nil {
-			continue
-		}
+			fmt.Printf("%s\n", lib.Name)
 
-		repo, err := github.ParseGitHubUrl(githubUrl)
-		if err != nil {
+			githubUrl, err := g.SourceCodeURL(lib.Name)
+			if err != nil {
+				return
+			}
+
+			repo, err := github.ParseGitHubUrl(githubUrl)
+			if err != nil {
+				params = append(params,
+					github.FetchRepositoryParam{
+						PackageName: lib.Name,
+						CanSearch:   false,
+					},
+				)
+				return
+			}
+
 			params = append(params,
 				github.FetchRepositoryParam{
+					Repo:        repo.Repo,
+					Owner:       repo.Owner,
 					PackageName: lib.Name,
-					CanSearch:   false,
+					CanSearch:   true,
 				},
 			)
-			continue
-		}
+		}(lib)
 
-		params = append(params,
-			github.FetchRepositoryParam{
-				Repo:        repo.Repo,
-				Owner:       repo.Owner,
-				PackageName: lib.Name,
-				CanSearch:   true,
-			},
-		)
+		wg.Wait()
 	}
 
 	return params
@@ -82,21 +100,33 @@ func Diagnose(d MedicalTechnician, r io.ReadSeekCloserAt, year int, ignores []st
 		slicedParams = append(slicedParams, fetchRepositoryParams[i:end])
 	}
 
+	maxConcurrency := FETCH_REPOS_PER_ONCE
+	var wg sync.WaitGroup
+	sem := make(chan struct{}, maxConcurrency)
 	for _, param := range slicedParams {
-		repos := github.FetchFromGitHub(param)
-		for _, r := range repos {
-			isIgnore := slices.Contains(ignores, r.Name)
-			diagnosis := Diagnosis{
-				Name:      r.Name,
-				Url:       r.Url,
-				Archived:  r.Archived,
-				Ignored:   isIgnore,
-				Diagnosed: true,
-				IsActive:  r.IsActive(year),
+		wg.Add(1)
+		sem <- struct{}{}
+		go func(param []github.FetchRepositoryParam) {
+			defer wg.Done()
+			defer func() { <-sem }()
+
+			repos := github.FetchFromGitHub(param)
+			for _, r := range repos {
+				isIgnore := slices.Contains(ignores, r.Name)
+				diagnosis := Diagnosis{
+					Name:      r.Name,
+					Url:       r.Url,
+					Archived:  r.Archived,
+					Ignored:   isIgnore,
+					Diagnosed: true,
+					IsActive:  r.IsActive(year),
+				}
+				diagnoses[r.Name] = diagnosis
 			}
-			diagnoses[r.Name] = diagnosis
-		}
+		}(param)
 	}
+
+	wg.Wait()
 
 	for _, fetchRepositoryParam := range fetchRepositoryParams {
 		if fetchRepositoryParam.CanSearch {

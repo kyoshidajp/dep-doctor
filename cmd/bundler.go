@@ -1,16 +1,20 @@
 package cmd
 
 import (
+	"net/http"
+
 	parser_io "github.com/aquasecurity/go-dep-parser/pkg/io"
 	"github.com/aquasecurity/go-dep-parser/pkg/ruby/bundler"
 	"github.com/aquasecurity/go-dep-parser/pkg/types"
 )
 
 type BundlerDoctor struct {
+	HTTPClient http.Client
 }
 
 func NewBundlerDoctor() *BundlerDoctor {
-	return &BundlerDoctor{}
+	client := &http.Client{}
+	return &BundlerDoctor{HTTPClient: *client}
 }
 
 func (d *BundlerDoctor) Deps(r parser_io.ReadSeekerAt) []types.Library {
@@ -21,6 +25,6 @@ func (d *BundlerDoctor) Deps(r parser_io.ReadSeekerAt) []types.Library {
 
 func (d *BundlerDoctor) SourceCodeURL(name string) (string, error) {
 	rubyGems := RubyGems{name: name}
-	url, err := rubyGems.fetchURLFromRegistry()
+	url, err := rubyGems.fetchURLFromRegistry(d.HTTPClient)
 	return url, err
 }
