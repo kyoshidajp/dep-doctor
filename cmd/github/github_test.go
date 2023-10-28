@@ -101,12 +101,12 @@ func TestParseGitHubUrl(t *testing.T) {
 
 func TestFetchFromGitHub(t *testing.T) {
 	tests := []struct {
-		name           string
-		nameWithOwners []NameWithOwner
+		name   string
+		params []FetchRepositoryParam
 	}{
 		{
 			name: "active repository",
-			nameWithOwners: []NameWithOwner{
+			params: []FetchRepositoryParam{
 				{
 					Owner: "rails",
 					Repo:  "rails",
@@ -136,7 +136,7 @@ func TestFetchFromGitHub(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := FetchFromGitHub(tt.nameWithOwners)
+			got := FetchFromGitHub(tt.params)
 			if d := cmp.Diff(got, expect, cmpopts.IgnoreFields(GitHubRepository{}, "LastCommittedAt")); len(d) != 0 {
 				t.Errorf("differs: (-got +want)\n%s", d)
 			}

@@ -33,14 +33,14 @@ func (r GitHubRepository) IsActive(year int) bool {
 	return targetDate.After(now)
 }
 
-type NameWithOwner struct {
+type FetchRepositoryParam struct {
 	PackageName string
 	Repo        string
 	Owner       string
 	CanSearch   bool
 }
 
-func (n NameWithOwner) GetName() string {
+func (n FetchRepositoryParam) GetName() string {
 	return fmt.Sprintf("repo:%s/%s", n.Owner, n.Repo)
 }
 
@@ -96,7 +96,7 @@ func ParseGitHubUrl(url string) (GitHubRepository, error) {
 	}, nil
 }
 
-func FetchFromGitHub(nameWithOwners []NameWithOwner) []GitHubRepository {
+func FetchFromGitHub(params []FetchRepositoryParam) []GitHubRepository {
 	token := os.Getenv("GITHUB_TOKEN")
 	if len(token) == 0 {
 		log.Fatal("env var `GITHUB_TOKEN` is not found")
@@ -136,9 +136,9 @@ func FetchFromGitHub(nameWithOwners []NameWithOwner) []GitHubRepository {
 		} `graphql:"search(query:$query, first:$count, type:REPOSITORY)"`
 	}
 
-	names := make([]string, len(nameWithOwners))
-	for i, n := range nameWithOwners {
-		names[i] = n.GetName()
+	names := make([]string, len(params))
+	for i, param := range params {
+		names[i] = param.GetName()
 	}
 	q := strings.Join(names, QUERY_SEPARATOR)
 	variables := map[string]interface{}{
