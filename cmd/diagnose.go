@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/aquasecurity/go-dep-parser/pkg/io"
@@ -18,6 +19,10 @@ import (
 )
 
 const MAX_YEAR_TO_BE_BLANK = 5
+
+// referenced as the number of goroutine parallels
+// should be optimized?
+const FETCH_REPOS_PER_ONCE = 20
 
 type Diagnosis struct {
 	Name      string
@@ -35,33 +40,46 @@ type MedicalTechnician interface {
 
 func FetchRepositoryParams(libs []types.Library, g MedicalTechnician) []github.FetchRepositoryParam {
 	var params []github.FetchRepositoryParam
+	maxConcurrency := FETCH_REPOS_PER_ONCE
+	var wg sync.WaitGroup
+	sem := make(chan struct{}, maxConcurrency)
+
 	for _, lib := range libs {
-		fmt.Printf("%s\n", lib.Name)
+		wg.Add(1)
+		sem <- struct{}{}
+		go func(lib types.Library) {
+			defer wg.Done()
+			defer func() { <-sem }()
 
-		githubUrl, err := g.SourceCodeURL(lib.Name)
-		if err != nil {
-			continue
-		}
+			fmt.Printf("%s\n", lib.Name)
 
-		repo, err := github.ParseGitHubUrl(githubUrl)
-		if err != nil {
+			githubUrl, err := g.SourceCodeURL(lib.Name)
+			if err != nil {
+				return
+			}
+
+			repo, err := github.ParseGitHubUrl(githubUrl)
+			if err != nil {
+				params = append(params,
+					github.FetchRepositoryParam{
+						PackageName: lib.Name,
+						CanSearch:   false,
+					},
+				)
+				return
+			}
+
 			params = append(params,
 				github.FetchRepositoryParam{
+					Repo:        repo.Repo,
+					Owner:       repo.Owner,
 					PackageName: lib.Name,
-					CanSearch:   false,
+					CanSearch:   true,
 				},
 			)
-			continue
-		}
+		}(lib)
 
-		params = append(params,
-			github.FetchRepositoryParam{
-				Repo:        repo.Repo,
-				Owner:       repo.Owner,
-				PackageName: lib.Name,
-				CanSearch:   true,
-			},
-		)
+		wg.Wait()
 	}
 
 	return params
