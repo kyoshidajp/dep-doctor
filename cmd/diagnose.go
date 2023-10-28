@@ -10,17 +10,14 @@ import (
 	"github.com/MakeNowJust/heredoc"
 	"github.com/aquasecurity/go-dep-parser/pkg/io"
 	parser_io "github.com/aquasecurity/go-dep-parser/pkg/io"
+	"github.com/aquasecurity/go-dep-parser/pkg/types"
 	"github.com/fatih/color"
 	"github.com/kyoshidajp/dep-doctor/cmd/github"
 	"github.com/spf13/cobra"
+	"golang.org/x/exp/slices"
 )
 
 const MAX_YEAR_TO_BE_BLANK = 5
-
-type Doctor interface {
-	Diagnose(r io.ReadSeekerAt, year int, ignores []string) map[string]Diagnosis
-	FetchRepositoryParams(r parser_io.ReadSeekerAt) []github.FetchRepositoryParam
-}
 
 type Diagnosis struct {
 	Name      string
@@ -31,18 +28,88 @@ type Diagnosis struct {
 	IsActive  bool
 }
 
-type Department struct {
-	doctor Doctor
+type MedicalTechnician interface {
+	Deps(r parser_io.ReadSeekerAt) []types.Library
+	SourceCodeURL(name string) (string, error)
 }
 
-func NewDepartment(d Doctor) *Department {
-	return &Department{
-		doctor: d,
+func FetchRepositoryParams(libs []types.Library, g MedicalTechnician) []github.FetchRepositoryParam {
+	var params []github.FetchRepositoryParam
+	for _, lib := range libs {
+		fmt.Printf("%s\n", lib.Name)
+
+		githubUrl, err := g.SourceCodeURL(lib.Name)
+		if err != nil {
+			continue
+		}
+
+		repo, err := github.ParseGitHubUrl(githubUrl)
+		if err != nil {
+			params = append(params,
+				github.FetchRepositoryParam{
+					PackageName: lib.Name,
+					CanSearch:   false,
+				},
+			)
+			continue
+		}
+
+		params = append(params,
+			github.FetchRepositoryParam{
+				Repo:        repo.Repo,
+				Owner:       repo.Owner,
+				PackageName: lib.Name,
+				CanSearch:   true,
+			},
+		)
 	}
+
+	return params
 }
 
-func (d *Department) Diagnose(r io.ReadSeekCloserAt, year int, ignores []string) map[string]Diagnosis {
-	return d.doctor.Diagnose(r, year, ignores)
+func Diagnose(d MedicalTechnician, r io.ReadSeekCloserAt, year int, ignores []string) map[string]Diagnosis {
+	diagnoses := make(map[string]Diagnosis)
+	slicedParams := [][]github.FetchRepositoryParam{}
+	deps := d.Deps(r)
+	fetchRepositoryParams := FetchRepositoryParams(deps, d)
+	sliceSize := len(fetchRepositoryParams)
+
+	for i := 0; i < sliceSize; i += github.SEARCH_REPOS_PER_ONCE {
+		end := i + github.SEARCH_REPOS_PER_ONCE
+		if sliceSize < end {
+			end = sliceSize
+		}
+		slicedParams = append(slicedParams, fetchRepositoryParams[i:end])
+	}
+
+	for _, param := range slicedParams {
+		repos := github.FetchFromGitHub(param)
+		for _, r := range repos {
+			isIgnore := slices.Contains(ignores, r.Name)
+			diagnosis := Diagnosis{
+				Name:      r.Name,
+				Url:       r.Url,
+				Archived:  r.Archived,
+				Ignored:   isIgnore,
+				Diagnosed: true,
+				IsActive:  r.IsActive(year),
+			}
+			diagnoses[r.Name] = diagnosis
+		}
+	}
+
+	for _, fetchRepositoryParam := range fetchRepositoryParams {
+		if fetchRepositoryParam.CanSearch {
+			continue
+		}
+
+		diagnosis := Diagnosis{
+			Name:      fetchRepositoryParam.PackageName,
+			Diagnosed: false,
+		}
+		diagnoses[fetchRepositoryParam.PackageName] = diagnosis
+	}
+	return diagnoses
 }
 
 type Options struct {
@@ -60,7 +127,7 @@ var (
 	o = &Options{}
 )
 
-var doctors = map[string]Doctor{
+var doctors = map[string]MedicalTechnician{
 	"bundler": NewBundlerDoctor(),
 	"yarn":    NewYarnDoctor(),
 	"pip":     NewPipDoctor(),
@@ -91,8 +158,7 @@ var diagnoseCmd = &cobra.Command{
 			log.Fatal(m)
 		}
 
-		department := NewDepartment(doctor)
-		diagnoses := department.Diagnose(f, o.year, o.Ignores())
+		diagnoses := Diagnose(doctor, f, o.year, o.Ignores())
 		if err := Report(diagnoses); err != nil {
 			os.Exit(1)
 		}

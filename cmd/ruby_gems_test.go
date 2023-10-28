@@ -37,8 +37,8 @@ func TestRubyGems_fetchURLFromRepository(t *testing.T) {
 
 	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			g := RubyGems{}
-			r, _ := g.fetchURLFromRegistry(tt.gem_name)
+			g := RubyGems{name: tt.gem_name}
+			r, _ := g.fetchURLFromRegistry()
 			expect := expects[i]
 			assert.Equal(t, true, strings.HasPrefix(r, expect.url))
 		})

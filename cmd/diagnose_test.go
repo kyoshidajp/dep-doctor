@@ -65,9 +65,9 @@ func TestDiagnose(t *testing.T) {
 		require.NoError(t, err)
 		defer f.Close()
 
-		doctor := NewDepartment(NewBundlerDoctor())
+		doctor := NewBundlerDoctor()
 		ignores := []string{"i18n"}
-		diagnoses := doctor.Diagnose(f, 2, ignores)
+		diagnoses := Diagnose(doctor, f, 2, ignores)
 		assert.Equal(t, expect, diagnoses)
 	})
 }
