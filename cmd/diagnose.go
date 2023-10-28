@@ -100,21 +100,33 @@ func Diagnose(d MedicalTechnician, r io.ReadSeekCloserAt, year int, ignores []st
 		slicedParams = append(slicedParams, fetchRepositoryParams[i:end])
 	}
 
+	maxConcurrency := FETCH_REPOS_PER_ONCE
+	var wg sync.WaitGroup
+	sem := make(chan struct{}, maxConcurrency)
 	for _, param := range slicedParams {
-		repos := github.FetchFromGitHub(param)
-		for _, r := range repos {
-			isIgnore := slices.Contains(ignores, r.Name)
-			diagnosis := Diagnosis{
-				Name:      r.Name,
-				Url:       r.Url,
-				Archived:  r.Archived,
-				Ignored:   isIgnore,
-				Diagnosed: true,
-				IsActive:  r.IsActive(year),
+		wg.Add(1)
+		sem <- struct{}{}
+		go func(param []github.FetchRepositoryParam) {
+			defer wg.Done()
+			defer func() { <-sem }()
+
+			repos := github.FetchFromGitHub(param)
+			for _, r := range repos {
+				isIgnore := slices.Contains(ignores, r.Name)
+				diagnosis := Diagnosis{
+					Name:      r.Name,
+					Url:       r.Url,
+					Archived:  r.Archived,
+					Ignored:   isIgnore,
+					Diagnosed: true,
+					IsActive:  r.IsActive(year),
+				}
+				diagnoses[r.Name] = diagnosis
 			}
-			diagnoses[r.Name] = diagnosis
-		}
+		}(param)
 	}
+
+	wg.Wait()
 
 	for _, fetchRepositoryParam := range fetchRepositoryParams {
 		if fetchRepositoryParam.CanSearch {
