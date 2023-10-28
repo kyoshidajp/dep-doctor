@@ -40,7 +40,7 @@ type FetchRepositoryParam struct {
 	CanSearch   bool
 }
 
-func (n FetchRepositoryParam) GetName() string {
+func (n FetchRepositoryParam) QueryWord() string {
 	return fmt.Sprintf("repo:%s/%s", n.Owner, n.Repo)
 }
 
@@ -138,7 +138,7 @@ func FetchFromGitHub(params []FetchRepositoryParam) []GitHubRepository {
 
 	names := make([]string, len(params))
 	for i, param := range params {
-		names[i] = param.GetName()
+		names[i] = param.QueryWord()
 	}
 	q := strings.Join(names, QUERY_SEPARATOR)
 	variables := map[string]interface{}{
