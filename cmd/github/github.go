@@ -153,12 +153,14 @@ func FetchFromGitHub(params []FetchRepositoryParam) []GitHubRepository {
 	}
 
 	for _, node := range query.Search.Nodes {
+		nodeRepo := node.Repository
+		lastCommit := nodeRepo.DefaultBranchRef.Target.Commit.History.Edges[0].Node
 		repos = append(repos, GitHubRepository{
-			Repo:            string(node.Repository.NameWithOwner),
-			Archived:        bool(node.Repository.IsArchived),
-			Url:             string(node.Repository.Url),
-			Name:            string(node.Repository.Name),
-			LastCommittedAt: time.Time(node.Repository.DefaultBranchRef.Target.Commit.History.Edges[0].Node.CommittedDate.Time),
+			Repo:            string(nodeRepo.NameWithOwner),
+			Archived:        bool(nodeRepo.IsArchived),
+			Url:             string(nodeRepo.Url),
+			Name:            string(nodeRepo.Name),
+			LastCommittedAt: time.Time(lastCommit.CommittedDate.Time),
 		})
 	}
 
