@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"strings"
 	"sync"
 
@@ -207,7 +208,15 @@ func Report(diagnoses map[string]Diagnosis) error {
 	errMessages, warnMessages, ignoredMessages := []string{}, []string{}, []string{}
 	errCount, warnCount, infoCount := 0, 0, 0
 	unDiagnosedCount, ignoredCount := 0, 0
-	for _, diagnosis := range diagnoses {
+
+	dep_names := make([]string, 0, len(diagnoses))
+	for key := range diagnoses {
+		dep_names = append(dep_names, key)
+	}
+	sort.Strings(dep_names)
+
+	for _, dep_name := range dep_names {
+		diagnosis := diagnoses[dep_name]
 		if diagnosis.Ignored {
 			ignoredMessages = append(ignoredMessages, fmt.Sprintf("[info] %s (ignored):", diagnosis.Name))
 			ignoredCount += 1
