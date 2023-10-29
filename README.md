@@ -58,7 +58,7 @@ Flags:
 For example:
 
 ```console
-$ dep-doctor diagnose -p bundler -file /path/to/Gemfile.lock
+$ dep-doctor diagnose -p bundler -f /path/to/Gemfile.lock
 concurrent-ruby
 dotenv
 faker
