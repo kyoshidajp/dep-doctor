@@ -11,15 +11,6 @@ import (
 // https://packagist.org/apidoc#get-package-data
 const PACKAGIST_REGISTRY_API = "https://repo.packagist.org/p2/%s.json"
 
-/*
-	type PackagistRegistryResponse struct {
-		Packages []struct {
-			Source struct {
-				URL string `json:"url"`
-			} `json:"source"`
-		} `json:"packages"`
-	}
-*/
 type PackagistRegistryResponse struct {
 	Packages map[string][]struct {
 		Source struct {
