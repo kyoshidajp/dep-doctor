@@ -22,6 +22,10 @@ However, some packages have archived their source code repositories or have had 
 | Go | | go.sum | (later) |
 | Rust | cargo | Cargo.lock | (later) |
 
+## Support repository hosting services
+
+Only GitHub.com
+
 ## Install
 
 ### Homebrew (macOS and Linux)
@@ -37,15 +41,47 @@ $ brew install kyoshidajp/dep-doctor/dep-doctor
 
 ## How to use
 
-Set GitHub access token as `GITHUB_TOKEN` to your environment variable.
+`GITHUB_TOKEN` must be set as an environment variable before execution.
+
+```console
+Usage:
+  dep-doctor diagnose [flags]
+
+Flags:
+  -h, --help               help for diagnose
+  -i, --ignores string     ignore dependencies (separated by a space)
+  -f, --lock_file string   lock file path (default "Gemfile.lock")
+  -p, --package string     package manager (default "bundler")
+  -y, --year int           max years of inactivity (default 5)
+```
 
 For example:
 
 ```console
 $ dep-doctor diagnose -p bundler -file /path/to/Gemfile.lock
+concurrent-ruby
+dotenv
+faker
+i18n
+method_source
+paperclip
+......
+[error] paperclip (archived): https://github.com/thoughtbot/paperclip
+Diagnosis completed! 6 dependencies.
+1 error, 0 warn (0 unknown), 0 info (0 ignored)
 ```
 
+## Report level
+
+| level | e.g. |
+| :---: | :---------- |
+| *error* | Source code repository is already archived. |
+| *warn* | Source code repository is not active or unknown. |
+| *info* | Other reasons. (specified to be ignored) | |
+
 ## How works
+
+![how_works](doc/images/how_works.png "dep-doctor how works")
 
 ## Author
 Katsuhiko YOSHIDA
