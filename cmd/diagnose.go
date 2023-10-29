@@ -159,10 +159,11 @@ var (
 )
 
 var doctors = map[string]MedicalTechnician{
-	"bundler": NewBundlerDoctor(),
-	"yarn":    NewYarnDoctor(),
-	"pip":     NewPipDoctor(),
-	"npm":     NewNPMDoctor(),
+	"bundler":  NewBundlerDoctor(),
+	"yarn":     NewYarnDoctor(),
+	"pip":      NewPipDoctor(),
+	"npm":      NewNPMDoctor(),
+	"composer": NewComposerDoctor(),
 }
 
 var diagnoseCmd = &cobra.Command{

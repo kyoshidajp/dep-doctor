@@ -17,6 +17,7 @@
 | JavaScript | yarn | yarn.lock | :heavy_check_mark: |
 | JavaScript | npm | package-lock.json | :heavy_check_mark: |
 | Python | pip | requirements.txt | :heavy_check_mark: |
+| PHP | composer | composer.lock | :heavy_check_mark: |
 | Go | | go.sum | (soon) |
 
 ## Install
