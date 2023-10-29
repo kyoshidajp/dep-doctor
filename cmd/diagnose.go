@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"strings"
 	"sync"
 
@@ -204,22 +205,29 @@ func init() {
 }
 
 func Report(diagnoses map[string]Diagnosis) error {
-	errMessages := []string{}
-	warnMessages := []string{}
-	ignoredMessages := []string{}
-	errCount := 0
-	unDiagnosedCount := 0
-	ignoredCount := 0
-	for _, diagnosis := range diagnoses {
+	errMessages, warnMessages, ignoredMessages := []string{}, []string{}, []string{}
+	errCount, warnCount, infoCount := 0, 0, 0
+	unDiagnosedCount, ignoredCount := 0, 0
+
+	dep_names := make([]string, 0, len(diagnoses))
+	for key := range diagnoses {
+		dep_names = append(dep_names, key)
+	}
+	sort.Strings(dep_names)
+
+	for _, dep_name := range dep_names {
+		diagnosis := diagnoses[dep_name]
 		if diagnosis.Ignored {
 			ignoredMessages = append(ignoredMessages, fmt.Sprintf("[info] %s (ignored):", diagnosis.Name))
 			ignoredCount += 1
+			infoCount += 1
 			continue
 		}
 
 		if !diagnosis.Diagnosed {
 			warnMessages = append(warnMessages, fmt.Sprintf("[warn] %s (unknown):", diagnosis.Name))
 			unDiagnosedCount += 1
+			warnCount += 1
 			continue
 		}
 		if diagnosis.Archived {
@@ -227,8 +235,8 @@ func Report(diagnoses map[string]Diagnosis) error {
 			errCount += 1
 		}
 		if !diagnosis.IsActive {
-			errMessages = append(errMessages, fmt.Sprintf("[error] %s (not-maintained): %s", diagnosis.Name, diagnosis.Url))
-			errCount += 1
+			warnMessages = append(warnMessages, fmt.Sprintf("[warn] %s (not-maintained): %s", diagnosis.Name, diagnosis.Url))
+			warnCount += 1
 		}
 	}
 
@@ -244,12 +252,12 @@ func Report(diagnoses map[string]Diagnosis) error {
 	}
 
 	color.Green(heredoc.Docf(`
-		Diagnose complete! %d dependencies.
-		%d error, %d unknown, %d ignored`,
+		Diagnosis completed! %d dependencies.
+		%d error, %d warn (%d unknown), %d info (%d ignored)`,
 		len(diagnoses),
 		errCount,
-		unDiagnosedCount,
-		ignoredCount),
+		warnCount, unDiagnosedCount,
+		infoCount, ignoredCount),
 	)
 
 	if len(errMessages) > 0 {
