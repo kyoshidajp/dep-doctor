@@ -69,7 +69,7 @@ func (githuburl GitHubURL) Parse() (string, string, error) {
 			return "", "", errors.New("error: Unknown URL")
 		}
 		owner = paths[1]
-		repo = paths[2]
+		repo = strings.Replace(paths[2], ".git", "", 1)
 	} else if u.Scheme == "file" {
 		if paths[0] == "github.com" {
 			owner = paths[1]
