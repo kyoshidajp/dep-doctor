@@ -204,14 +204,9 @@ func init() {
 }
 
 func Report(diagnoses map[string]Diagnosis) error {
-	errMessages := []string{}
-	warnMessages := []string{}
-	ignoredMessages := []string{}
-	errCount := 0
-	warnCount := 0
-	infoCount := 0
-	unDiagnosedCount := 0
-	ignoredCount := 0
+	errMessages, warnMessages, ignoredMessages := []string{}, []string{}, []string{}
+	errCount, warnCount, infoCount := 0, 0, 0
+	unDiagnosedCount, ignoredCount := 0, 0
 	for _, diagnosis := range diagnoses {
 		if diagnosis.Ignored {
 			ignoredMessages = append(ignoredMessages, fmt.Sprintf("[info] %s (ignored):", diagnosis.Name))
