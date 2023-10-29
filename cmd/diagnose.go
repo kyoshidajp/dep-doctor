@@ -208,6 +208,7 @@ func Report(diagnoses map[string]Diagnosis) error {
 	warnMessages := []string{}
 	ignoredMessages := []string{}
 	errCount := 0
+	warnCount := 0
 	unDiagnosedCount := 0
 	ignoredCount := 0
 	for _, diagnosis := range diagnoses {
@@ -220,6 +221,7 @@ func Report(diagnoses map[string]Diagnosis) error {
 		if !diagnosis.Diagnosed {
 			warnMessages = append(warnMessages, fmt.Sprintf("[warn] %s (unknown):", diagnosis.Name))
 			unDiagnosedCount += 1
+			warnCount += 1
 			continue
 		}
 		if diagnosis.Archived {
@@ -227,8 +229,8 @@ func Report(diagnoses map[string]Diagnosis) error {
 			errCount += 1
 		}
 		if !diagnosis.IsActive {
-			errMessages = append(errMessages, fmt.Sprintf("[error] %s (not-maintained): %s", diagnosis.Name, diagnosis.Url))
-			errCount += 1
+			warnMessages = append(warnMessages, fmt.Sprintf("[warn] %s (not-maintained): %s", diagnosis.Name, diagnosis.Url))
+			warnCount += 1
 		}
 	}
 
@@ -245,9 +247,10 @@ func Report(diagnoses map[string]Diagnosis) error {
 
 	color.Green(heredoc.Docf(`
 		Diagnose complete! %d dependencies.
-		%d error, %d unknown, %d ignored`,
+		%d error, %d warn (%d unknown), %d ignored`,
 		len(diagnoses),
 		errCount,
+		warnCount,
 		unDiagnosedCount,
 		ignoredCount),
 	)
