@@ -1,0 +1,46 @@
+inputs:
+  version:
+    description: "A version to install dep-doctor"
+    default: latest
+    required: false
+  github-token:
+    description: "The token used when calling GitHub API"
+    required: false
+    default: ${{ github.token }}
+runs:
+  using: "composite"
+  steps:
+    - shell: bash
+      env:
+        github_token: ${{ inputs.github-token }}
+      run: |
+        set -e
+        VERSION="${{ inputs.version }}"
+        if [ -n "${{ inputs.version-file }}" ]; then
+          VERSION="v$(cat ${{ inputs.version-file }})"
+        fi
+        api_request_args=("-sS")
+        if [[ -n "$github_token" ]]; then
+          api_request_args=("${api_request_args[@]}" -H "authorization: token $github_token")
+        fi
+        if [ "${VERSION}" = "latest" ]; then
+            DOWNLOAD_URL=$(curl "${api_request_args[@]}" https://api.github.com/repos/kyoshidajp/dep-doctor/releases | jq -r '[.[]|select(.tag_name > "v0.2")][0].assets[].browser_download_url|select(match("Linux_arm64."))')
+        else
+          DOWNLOAD_URL=https://github.com/kyoshidajp/dep-doctor/releases/download/${VERSION}/dep-doctor_Linux_arm64.tar.gz
+        fi
+        mkdir -p ${RUNNER_TOOL_CACHE}/dep-doctor
+        cd /tmp
+        curl -sfLO ${DOWNLOAD_URL}
+        if [[ "${DOWNLOAD_URL}" =~ \.tar\.gz$ ]]; then
+          FILENAME=$(basename $DOWNLOAD_URL .tar.gz)
+          tar xzvf ${FILENAME}.tar.gz
+          sudo install dep-doctor ${RUNNER_TOOL_CACHE}/dep-doctor/dep-doctor
+        elif [[ "${DOWNLOAD_URL}" =~ \.zip$ ]]; then
+          FILENAME=$(basename $DOWNLOAD_URL .zip)
+          unzip ${FILENAME}.zip
+          sudo install ${FILENAME} ${RUNNER_TOOL_CACHE}/dep-doctor/dep-doctor
+        fi
+
+        echo "Adding ${RUNNER_TOOL_CACHE}/dep-doctor to path..."
+        echo "${RUNNER_TOOL_CACHE}/dep-doctor" >> $GITHUB_PATH
+        "${RUNNER_TOOL_CACHE}/dep-doctor/depdoctor" version
