@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/aquasecurity/go-dep-parser/pkg/types"
 )
 
 // https://packagist.org/apidoc#get-package-data
@@ -20,11 +22,11 @@ type PackagistRegistryResponse struct {
 }
 
 type Packagist struct {
-	name string
+	lib types.Library
 }
 
 func (p *Packagist) fetchURLFromRegistry(client http.Client) (string, error) {
-	url := fmt.Sprintf(PACKAGIST_REGISTRY_API, p.name)
+	url := fmt.Sprintf(PACKAGIST_REGISTRY_API, p.lib.Name)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return "", err
@@ -49,5 +51,5 @@ func (p *Packagist) fetchURLFromRegistry(client http.Client) (string, error) {
 		return "", nil
 	}
 
-	return registryResponse.Packages[p.name][0].Source.URL, nil
+	return registryResponse.Packages[p.lib.Name][0].Source.URL, nil
 }

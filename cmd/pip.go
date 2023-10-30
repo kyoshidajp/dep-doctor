@@ -23,8 +23,8 @@ func (d *PipDoctor) Deps(r parser_io.ReadSeekerAt) []types.Library {
 	return deps
 }
 
-func (d *PipDoctor) SourceCodeURL(name string) (string, error) {
-	pypi := Pypi{name: name}
+func (d *PipDoctor) SourceCodeURL(lib types.Library) (string, error) {
+	pypi := Pypi{name: lib.Name}
 	url, err := pypi.fetchURLFromRegistry(d.HTTPClient)
 	return url, err
 }

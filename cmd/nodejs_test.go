@@ -5,17 +5,20 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/aquasecurity/go-dep-parser/pkg/types"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNodejs_fetchURLFromRegistry(t *testing.T) {
 	tests := []struct {
-		name     string
-		dep_name string
+		name string
+		lib  types.Library
 	}{
 		{
-			name:     "source_code_uri exists",
-			dep_name: "react",
+			name: "source_code_uri exists",
+			lib: types.Library{
+				Name: "react",
+			},
 		},
 	}
 	expects := []struct {
@@ -30,7 +33,7 @@ func TestNodejs_fetchURLFromRegistry(t *testing.T) {
 
 	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			n := Nodejs{name: tt.dep_name}
+			n := Nodejs{lib: tt.lib}
 			r, _ := n.fetchURLFromRegistry(http.Client{})
 			expect := expects[i]
 			assert.Equal(t, true, strings.HasPrefix(r, expect.url))

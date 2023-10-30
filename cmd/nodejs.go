@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/aquasecurity/go-dep-parser/pkg/types"
 )
 
 // https://docs.npmjs.com/cli/v8/using-npm/registry
@@ -18,11 +20,11 @@ type NodejsRegistryResponse struct {
 }
 
 type Nodejs struct {
-	name string
+	lib types.Library
 }
 
 func (n *Nodejs) fetchURLFromRegistry(client http.Client) (string, error) {
-	url := fmt.Sprintf(NODEJS_REGISTRY_API, n.name)
+	url := fmt.Sprintf(NODEJS_REGISTRY_API, n.lib.Name)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return "", err

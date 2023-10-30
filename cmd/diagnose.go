@@ -36,7 +36,7 @@ type Diagnosis struct {
 
 type MedicalTechnician interface {
 	Deps(r parser_io.ReadSeekerAt) []types.Library
-	SourceCodeURL(name string) (string, error)
+	SourceCodeURL(lib types.Library) (string, error)
 }
 
 func FetchRepositoryParams(libs []types.Library, g MedicalTechnician) []github.FetchRepositoryParam {
@@ -54,7 +54,7 @@ func FetchRepositoryParams(libs []types.Library, g MedicalTechnician) []github.F
 
 			fmt.Printf("%s\n", lib.Name)
 
-			githubUrl, err := g.SourceCodeURL(lib.Name)
+			githubUrl, err := g.SourceCodeURL(lib)
 			if err != nil {
 				return
 			}
@@ -164,6 +164,7 @@ var doctors = map[string]MedicalTechnician{
 	"pip":      NewPipDoctor(),
 	"npm":      NewNPMDoctor(),
 	"composer": NewComposerDoctor(),
+	"golang":   NewGolangDoctor(),
 }
 
 var diagnoseCmd = &cobra.Command{
