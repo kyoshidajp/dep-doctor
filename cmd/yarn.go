@@ -23,8 +23,8 @@ func (d *YarnDoctor) Deps(r parser_io.ReadSeekerAt) []types.Library {
 	return deps
 }
 
-func (d *YarnDoctor) SourceCodeURL(name string) (string, error) {
-	nodejs := Nodejs{name: name}
+func (d *YarnDoctor) SourceCodeURL(lib types.Library) (string, error) {
+	nodejs := Nodejs{lib: lib}
 	url, err := nodejs.fetchURLFromRegistry(d.HTTPClient)
 	return url, err
 }

@@ -23,8 +23,8 @@ func (d *ComposerDoctor) Deps(r parser_io.ReadSeekerAt) []types.Library {
 	return deps
 }
 
-func (d *ComposerDoctor) SourceCodeURL(name string) (string, error) {
-	packagist := Packagist{name: name}
+func (d *ComposerDoctor) SourceCodeURL(lib types.Library) (string, error) {
+	packagist := Packagist{lib: lib}
 	url, err := packagist.fetchURLFromRegistry(d.HTTPClient)
 	return url, err
 }

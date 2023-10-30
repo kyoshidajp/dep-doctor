@@ -16,6 +16,7 @@ require (
 	go.uber.org/multierr v1.10.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
 	golang.org/x/exp v0.0.0-20220407100705-7b9b53b0aca4 // indirect
+	golang.org/x/mod v0.13.0 // indirect
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
@@ -27,7 +28,7 @@ require (
 
 require (
 	github.com/MakeNowJust/heredoc v1.0.0
-	github.com/aquasecurity/go-dep-parser v0.0.0-20231013060839-6f348921ea39
+	github.com/aquasecurity/go-dep-parser v0.0.0-20231030050624-4548cca9a5c9
 	github.com/fatih/color v1.15.0
 	github.com/google/go-cmp v0.6.0
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect

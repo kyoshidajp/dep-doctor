@@ -19,7 +19,7 @@ However, some packages have archived their source code repositories or have had 
 | Python | poetry | poetry.lock | (later) |
 | Python | pipenv | Pipfile.lock | (later) |
 | PHP | composer | composer.lock | :heavy_check_mark: |
-| Go | | go.sum | (later) |
+| Go | golang | go.mod | :heavy_check_mark: |
 | Rust | cargo | Cargo.lock | (later) |
 
 ## Support repository hosting services

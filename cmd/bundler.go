@@ -23,8 +23,8 @@ func (d *BundlerDoctor) Deps(r parser_io.ReadSeekerAt) []types.Library {
 	return deps
 }
 
-func (d *BundlerDoctor) SourceCodeURL(name string) (string, error) {
-	rubyGems := RubyGems{name: name}
+func (d *BundlerDoctor) SourceCodeURL(lib types.Library) (string, error) {
+	rubyGems := RubyGems{name: lib.Name}
 	url, err := rubyGems.fetchURLFromRegistry(d.HTTPClient)
 	return url, err
 }
