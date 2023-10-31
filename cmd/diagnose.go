@@ -27,7 +27,7 @@ const FETCH_REPOS_PER_ONCE = 20
 
 type Diagnosis struct {
 	Name      string
-	Url       string
+	URL       string
 	Archived  bool
 	Ignored   bool
 	Diagnosed bool
@@ -54,12 +54,12 @@ func FetchRepositoryParams(libs []types.Library, g MedicalTechnician) []github.F
 
 			fmt.Printf("%s\n", lib.Name)
 
-			githubUrl, err := g.SourceCodeURL(lib)
+			url, err := g.SourceCodeURL(lib)
 			if err != nil {
 				return
 			}
 
-			repo, err := github.ParseGitHubUrl(githubUrl)
+			repo, err := github.ParseGitHubURL(url)
 			if err != nil {
 				params = append(params,
 					github.FetchRepositoryParam{
@@ -116,7 +116,7 @@ func Diagnose(d MedicalTechnician, r io.ReadSeekCloserAt, year int, ignores []st
 				isIgnore := slices.Contains(ignores, r.Name)
 				diagnosis := Diagnosis{
 					Name:      r.Name,
-					Url:       r.Url,
+					URL:       r.URL,
 					Archived:  r.Archived,
 					Ignored:   isIgnore,
 					Diagnosed: true,
@@ -233,11 +233,11 @@ func Report(diagnoses map[string]Diagnosis) error {
 			continue
 		}
 		if diagnosis.Archived {
-			errMessages = append(errMessages, fmt.Sprintf("[error] %s (archived): %s", diagnosis.Name, diagnosis.Url))
+			errMessages = append(errMessages, fmt.Sprintf("[error] %s (archived): %s", diagnosis.Name, diagnosis.URL))
 			errCount += 1
 		}
 		if !diagnosis.IsActive {
-			warnMessages = append(warnMessages, fmt.Sprintf("[warn] %s (not-maintained): %s", diagnosis.Name, diagnosis.Url))
+			warnMessages = append(warnMessages, fmt.Sprintf("[warn] %s (not-maintained): %s", diagnosis.Name, diagnosis.URL))
 			warnCount += 1
 		}
 	}
