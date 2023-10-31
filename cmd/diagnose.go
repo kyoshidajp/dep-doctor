@@ -104,14 +104,14 @@ func Diagnose(d MedicalTechnician, r io.ReadSeekCloserAt, year int, ignores []st
 	maxConcurrency := FETCH_REPOS_PER_ONCE
 	var wg sync.WaitGroup
 	sem := make(chan struct{}, maxConcurrency)
-	for _, param := range slicedParams {
+	for _, params := range slicedParams {
 		wg.Add(1)
 		sem <- struct{}{}
-		go func(param []github.FetchRepositoryParam) {
+		go func(params []github.FetchRepositoryParam) {
 			defer wg.Done()
 			defer func() { <-sem }()
 
-			repos := github.FetchFromGitHub(param)
+			repos := github.FetchFromGitHub(params)
 			for _, r := range repos {
 				isIgnore := slices.Contains(ignores, r.Name)
 				diagnosis := Diagnosis{
@@ -124,7 +124,7 @@ func Diagnose(d MedicalTechnician, r io.ReadSeekCloserAt, year int, ignores []st
 				}
 				diagnoses[r.Name] = diagnosis
 			}
-		}(param)
+		}(params)
 	}
 
 	wg.Wait()
