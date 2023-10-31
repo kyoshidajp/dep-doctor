@@ -17,10 +17,10 @@ func NewBundlerDoctor() *BundlerDoctor {
 	return &BundlerDoctor{HTTPClient: *client}
 }
 
-func (d *BundlerDoctor) Deps(r parser_io.ReadSeekerAt) []types.Library {
+func (d *BundlerDoctor) Libraries(r parser_io.ReadSeekerAt) []types.Library {
 	p := &bundler.Parser{}
-	deps, _, _ := p.Parse(r)
-	return deps
+	libs, _, _ := p.Parse(r)
+	return libs
 }
 
 func (d *BundlerDoctor) SourceCodeURL(lib types.Library) (string, error) {

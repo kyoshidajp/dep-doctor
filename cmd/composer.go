@@ -17,10 +17,10 @@ func NewComposerDoctor() *ComposerDoctor {
 	return &ComposerDoctor{HTTPClient: *client}
 }
 
-func (d *ComposerDoctor) Deps(r parser_io.ReadSeekerAt) []types.Library {
+func (d *ComposerDoctor) Libraries(r parser_io.ReadSeekerAt) []types.Library {
 	p := composer.NewParser()
-	deps, _, _ := p.Parse(r)
-	return deps
+	libs, _, _ := p.Parse(r)
+	return libs
 }
 
 func (d *ComposerDoctor) SourceCodeURL(lib types.Library) (string, error) {

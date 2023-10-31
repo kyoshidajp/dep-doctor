@@ -17,10 +17,10 @@ func NewGolangDoctor() *GolangDoctor {
 	return &GolangDoctor{HTTPClient: *client}
 }
 
-func (d *GolangDoctor) Deps(r parser_io.ReadSeekerAt) []types.Library {
+func (d *GolangDoctor) Libraries(r parser_io.ReadSeekerAt) []types.Library {
 	p := &mod.Parser{}
-	deps, _, _ := p.Parse(r)
-	return deps
+	libs, _, _ := p.Parse(r)
+	return libs
 }
 
 func (d *GolangDoctor) SourceCodeURL(lib types.Library) (string, error) {

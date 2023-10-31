@@ -35,7 +35,7 @@ type Diagnosis struct {
 }
 
 type MedicalTechnician interface {
-	Deps(r parser_io.ReadSeekerAt) []types.Library
+	Libraries(r parser_io.ReadSeekerAt) []types.Library
 	SourceCodeURL(lib types.Library) (string, error)
 }
 
@@ -89,8 +89,8 @@ func FetchRepositoryParams(libs []types.Library, g MedicalTechnician) []github.F
 func Diagnose(d MedicalTechnician, r io.ReadSeekCloserAt, year int, ignores []string) map[string]Diagnosis {
 	diagnoses := make(map[string]Diagnosis)
 	slicedParams := [][]github.FetchRepositoryParam{}
-	deps := d.Deps(r)
-	fetchRepositoryParams := FetchRepositoryParams(deps, d)
+	libs := d.Libraries(r)
+	fetchRepositoryParams := FetchRepositoryParams(libs, d)
 	sliceSize := len(fetchRepositoryParams)
 
 	for i := 0; i < sliceSize; i += github.SEARCH_REPOS_PER_ONCE {
@@ -211,14 +211,14 @@ func Report(diagnoses map[string]Diagnosis) error {
 	errCount, warnCount, infoCount := 0, 0, 0
 	unDiagnosedCount, ignoredCount := 0, 0
 
-	dep_names := make([]string, 0, len(diagnoses))
+	lib_names := make([]string, 0, len(diagnoses))
 	for key := range diagnoses {
-		dep_names = append(dep_names, key)
+		lib_names = append(lib_names, key)
 	}
-	sort.Strings(dep_names)
+	sort.Strings(lib_names)
 
-	for _, dep_name := range dep_names {
-		diagnosis := diagnoses[dep_name]
+	for _, lib_name := range lib_names {
+		diagnosis := diagnoses[lib_name]
 		if diagnosis.Ignored {
 			ignoredMessages = append(ignoredMessages, fmt.Sprintf("[info] %s (ignored):", diagnosis.Name))
 			ignoredCount += 1
@@ -254,7 +254,7 @@ func Report(diagnoses map[string]Diagnosis) error {
 	}
 
 	color.Green(heredoc.Docf(`
-		Diagnosis completed! %d dependencies.
+		Diagnosis completed! %d libraries.
 		%d error, %d warn (%d unknown), %d info (%d ignored)`,
 		len(diagnoses),
 		errCount,

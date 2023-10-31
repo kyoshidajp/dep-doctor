@@ -16,10 +16,10 @@ func NewNPMDoctor() *NPMDoctor {
 	return &NPMDoctor{}
 }
 
-func (d *NPMDoctor) Deps(r parser_io.ReadSeekerAt) []types.Library {
+func (d *NPMDoctor) Libraries(r parser_io.ReadSeekerAt) []types.Library {
 	p := npm.NewParser()
-	deps, _, _ := p.Parse(r)
-	return deps
+	libs, _, _ := p.Parse(r)
+	return libs
 }
 
 func (d *NPMDoctor) SourceCodeURL(lib types.Library) (string, error) {
