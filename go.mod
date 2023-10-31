@@ -5,6 +5,7 @@ go 1.20
 require github.com/spf13/cobra v1.7.0
 
 require (
+	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/liamg/jfather v0.0.7 // indirect

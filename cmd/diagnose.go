@@ -193,6 +193,7 @@ var doctors = map[string]MedicalTechnician{
 	"npm":      NewNPMDoctor(),
 	"composer": NewComposerDoctor(),
 	"golang":   NewGolangDoctor(),
+	"cargo":    NewCargoDoctor(),
 }
 
 var diagnoseCmd = &cobra.Command{
