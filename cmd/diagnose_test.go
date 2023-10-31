@@ -12,7 +12,7 @@ func TestDiagnose(t *testing.T) {
 	expect := map[string]Diagnosis{
 		"faker": {
 			Name:      "faker",
-			Url:       "https://github.com/faker-ruby/faker",
+			URL:       "https://github.com/faker-ruby/faker",
 			Archived:  false,
 			Ignored:   false,
 			Diagnosed: true,
@@ -20,7 +20,7 @@ func TestDiagnose(t *testing.T) {
 		},
 		"concurrent-ruby": {
 			Name:      "concurrent-ruby",
-			Url:       "https://github.com/ruby-concurrency/concurrent-ruby",
+			URL:       "https://github.com/ruby-concurrency/concurrent-ruby",
 			Archived:  false,
 			Ignored:   false,
 			Diagnosed: true,
@@ -28,7 +28,7 @@ func TestDiagnose(t *testing.T) {
 		},
 		"i18n": {
 			Name:      "i18n",
-			Url:       "https://github.com/ruby-i18n/i18n",
+			URL:       "https://github.com/ruby-i18n/i18n",
 			Archived:  false,
 			Ignored:   true,
 			Diagnosed: true,
@@ -36,7 +36,7 @@ func TestDiagnose(t *testing.T) {
 		},
 		"method_source": {
 			Name:      "method_source",
-			Url:       "https://github.com/banister/method_source",
+			URL:       "https://github.com/banister/method_source",
 			Archived:  false,
 			Ignored:   false,
 			Diagnosed: true,
@@ -44,7 +44,7 @@ func TestDiagnose(t *testing.T) {
 		},
 		"paperclip": {
 			Name:      "paperclip",
-			Url:       "https://github.com/thoughtbot/paperclip",
+			URL:       "https://github.com/thoughtbot/paperclip",
 			Archived:  true,
 			Ignored:   false,
 			Diagnosed: true,
@@ -52,7 +52,7 @@ func TestDiagnose(t *testing.T) {
 		},
 		"dotenv": {
 			Name:      "dotenv",
-			Url:       "https://github.com/bkeepers/dotenv",
+			URL:       "https://github.com/bkeepers/dotenv",
 			Archived:  false,
 			Ignored:   false,
 			Diagnosed: true,

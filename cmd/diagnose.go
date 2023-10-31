@@ -27,7 +27,7 @@ const FETCH_REPOS_PER_ONCE = 20
 
 type Diagnosis struct {
 	Name      string
-	Url       string
+	URL       string
 	Archived  bool
 	Ignored   bool
 	Diagnosed bool
@@ -35,15 +35,14 @@ type Diagnosis struct {
 }
 
 type MedicalTechnician interface {
-	Deps(r parser_io.ReadSeekerAt) []types.Library
+	Libraries(r parser_io.ReadSeekerAt) []types.Library
 	SourceCodeURL(lib types.Library) (string, error)
 }
 
 func FetchRepositoryParams(libs []types.Library, g MedicalTechnician) []github.FetchRepositoryParam {
 	var params []github.FetchRepositoryParam
-	maxConcurrency := FETCH_REPOS_PER_ONCE
 	var wg sync.WaitGroup
-	sem := make(chan struct{}, maxConcurrency)
+	sem := make(chan struct{}, FETCH_REPOS_PER_ONCE)
 
 	for _, lib := range libs {
 		wg.Add(1)
@@ -54,12 +53,12 @@ func FetchRepositoryParams(libs []types.Library, g MedicalTechnician) []github.F
 
 			fmt.Printf("%s\n", lib.Name)
 
-			githubUrl, err := g.SourceCodeURL(lib)
+			url, err := g.SourceCodeURL(lib)
 			if err != nil {
 				return
 			}
 
-			repo, err := github.ParseGitHubUrl(githubUrl)
+			repo, err := github.ParseGitHubURL(url)
 			if err != nil {
 				params = append(params,
 					github.FetchRepositoryParam{
@@ -89,8 +88,8 @@ func FetchRepositoryParams(libs []types.Library, g MedicalTechnician) []github.F
 func Diagnose(d MedicalTechnician, r io.ReadSeekCloserAt, year int, ignores []string) map[string]Diagnosis {
 	diagnoses := make(map[string]Diagnosis)
 	slicedParams := [][]github.FetchRepositoryParam{}
-	deps := d.Deps(r)
-	fetchRepositoryParams := FetchRepositoryParams(deps, d)
+	libs := d.Libraries(r)
+	fetchRepositoryParams := FetchRepositoryParams(libs, d)
 	sliceSize := len(fetchRepositoryParams)
 
 	for i := 0; i < sliceSize; i += github.SEARCH_REPOS_PER_ONCE {
@@ -101,22 +100,21 @@ func Diagnose(d MedicalTechnician, r io.ReadSeekCloserAt, year int, ignores []st
 		slicedParams = append(slicedParams, fetchRepositoryParams[i:end])
 	}
 
-	maxConcurrency := FETCH_REPOS_PER_ONCE
 	var wg sync.WaitGroup
-	sem := make(chan struct{}, maxConcurrency)
-	for _, param := range slicedParams {
+	sem := make(chan struct{}, FETCH_REPOS_PER_ONCE)
+	for _, params := range slicedParams {
 		wg.Add(1)
 		sem <- struct{}{}
-		go func(param []github.FetchRepositoryParam) {
+		go func(params []github.FetchRepositoryParam) {
 			defer wg.Done()
 			defer func() { <-sem }()
 
-			repos := github.FetchFromGitHub(param)
+			repos := github.FetchFromGitHub(params)
 			for _, r := range repos {
 				isIgnore := slices.Contains(ignores, r.Name)
 				diagnosis := Diagnosis{
 					Name:      r.Name,
-					Url:       r.Url,
+					URL:       r.URL,
 					Archived:  r.Archived,
 					Ignored:   isIgnore,
 					Diagnosed: true,
@@ -124,7 +122,7 @@ func Diagnose(d MedicalTechnician, r io.ReadSeekCloserAt, year int, ignores []st
 				}
 				diagnoses[r.Name] = diagnosis
 			}
-		}(param)
+		}(params)
 	}
 
 	wg.Wait()
@@ -211,14 +209,14 @@ func Report(diagnoses map[string]Diagnosis) error {
 	errCount, warnCount, infoCount := 0, 0, 0
 	unDiagnosedCount, ignoredCount := 0, 0
 
-	dep_names := make([]string, 0, len(diagnoses))
+	lib_names := make([]string, 0, len(diagnoses))
 	for key := range diagnoses {
-		dep_names = append(dep_names, key)
+		lib_names = append(lib_names, key)
 	}
-	sort.Strings(dep_names)
+	sort.Strings(lib_names)
 
-	for _, dep_name := range dep_names {
-		diagnosis := diagnoses[dep_name]
+	for _, lib_name := range lib_names {
+		diagnosis := diagnoses[lib_name]
 		if diagnosis.Ignored {
 			ignoredMessages = append(ignoredMessages, fmt.Sprintf("[info] %s (ignored):", diagnosis.Name))
 			ignoredCount += 1
@@ -233,11 +231,11 @@ func Report(diagnoses map[string]Diagnosis) error {
 			continue
 		}
 		if diagnosis.Archived {
-			errMessages = append(errMessages, fmt.Sprintf("[error] %s (archived): %s", diagnosis.Name, diagnosis.Url))
+			errMessages = append(errMessages, fmt.Sprintf("[error] %s (archived): %s", diagnosis.Name, diagnosis.URL))
 			errCount += 1
 		}
 		if !diagnosis.IsActive {
-			warnMessages = append(warnMessages, fmt.Sprintf("[warn] %s (not-maintained): %s", diagnosis.Name, diagnosis.Url))
+			warnMessages = append(warnMessages, fmt.Sprintf("[warn] %s (not-maintained): %s", diagnosis.Name, diagnosis.URL))
 			warnCount += 1
 		}
 	}
@@ -254,7 +252,7 @@ func Report(diagnoses map[string]Diagnosis) error {
 	}
 
 	color.Green(heredoc.Docf(`
-		Diagnosis completed! %d dependencies.
+		Diagnosis completed! %d libraries.
 		%d error, %d warn (%d unknown), %d info (%d ignored)`,
 		len(diagnoses),
 		errCount,

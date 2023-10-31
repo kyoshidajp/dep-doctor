@@ -47,7 +47,7 @@ func TestGitHubRepository_IsActive(t *testing.T) {
 	}
 }
 
-func TestParseGitHubUrl(t *testing.T) {
+func TestParseGitHubURL(t *testing.T) {
 	tests := []struct {
 		name string
 		url  string
@@ -91,7 +91,7 @@ func TestParseGitHubUrl(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r, _ := ParseGitHubUrl(tt.url)
+			r, _ := ParseGitHubURL(tt.url)
 			expect := expects[tt.name]
 			assert.Equal(t, expect.Owner, r.Owner)
 			assert.Equal(t, expect.Repo, r.Repo)
@@ -123,13 +123,13 @@ func TestFetchFromGitHub(t *testing.T) {
 		{
 			Name:     "rails",
 			Repo:     "rails/rails",
-			Url:      "https://github.com/rails/rails",
+			URL:      "https://github.com/rails/rails",
 			Archived: false,
 		},
 		{
 			Name:     "strong_parameters",
 			Repo:     "rails/strong_parameters",
-			Url:      "https://github.com/rails/strong_parameters",
+			URL:      "https://github.com/rails/strong_parameters",
 			Archived: true,
 		},
 	}

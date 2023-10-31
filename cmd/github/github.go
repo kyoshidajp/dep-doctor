@@ -23,7 +23,7 @@ type GitHubRepository struct {
 	Name            string
 	Owner           string
 	Repo            string
-	Url             string
+	URL             string
 	Archived        bool
 	LastCommittedAt time.Time
 }
@@ -82,7 +82,7 @@ func (githuburl GitHubURL) Parse() (string, string, error) {
 	return owner, repo, nil
 }
 
-func ParseGitHubUrl(url string) (GitHubRepository, error) {
+func ParseGitHubURL(url string) (GitHubRepository, error) {
 	githubURL := GitHubURL{
 		URL: url,
 	}
@@ -93,7 +93,7 @@ func ParseGitHubUrl(url string) (GitHubRepository, error) {
 	return GitHubRepository{
 		Owner: owner,
 		Repo:  repo,
-		Url:   url,
+		URL:   url,
 	}, nil
 }
 
@@ -160,7 +160,7 @@ func FetchFromGitHub(params []FetchRepositoryParam) []GitHubRepository {
 		repos = append(repos, GitHubRepository{
 			Repo:            string(nodeRepo.NameWithOwner),
 			Archived:        bool(nodeRepo.IsArchived),
-			Url:             string(nodeRepo.Url),
+			URL:             string(nodeRepo.Url),
 			Name:            string(nodeRepo.Name),
 			LastCommittedAt: time.Time(lastCommit.CommittedDate.Time),
 		})

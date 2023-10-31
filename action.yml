@@ -43,4 +43,4 @@ runs:
 
         echo "Adding ${RUNNER_TOOL_CACHE}/dep-doctor to path..."
         echo "${RUNNER_TOOL_CACHE}/dep-doctor" >> $GITHUB_PATH
-        "${RUNNER_TOOL_CACHE}/dep-doctor/depdoctor" version
+        "${RUNNER_TOOL_CACHE}/dep-doctor/dep-doctor" version

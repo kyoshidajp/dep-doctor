@@ -10,11 +10,11 @@ import (
 func TestPyPi_fetchURLFromRegistry(t *testing.T) {
 	tests := []struct {
 		name     string
-		dep_name string
+		lib_name string
 	}{
 		{
 			name:     "source_code_uri exists",
-			dep_name: "pip",
+			lib_name: "pip",
 		},
 	}
 	expects := []struct {
@@ -29,7 +29,7 @@ func TestPyPi_fetchURLFromRegistry(t *testing.T) {
 
 	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := Pypi{name: tt.dep_name}
+			p := Pypi{name: tt.lib_name}
 			r, _ := p.fetchURLFromRegistry(http.Client{})
 			expect := expects[i]
 			assert.Equal(t, expect.url, r)
