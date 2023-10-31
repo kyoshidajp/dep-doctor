@@ -41,9 +41,8 @@ type MedicalTechnician interface {
 
 func FetchRepositoryParams(libs []types.Library, g MedicalTechnician) []github.FetchRepositoryParam {
 	var params []github.FetchRepositoryParam
-	maxConcurrency := FETCH_REPOS_PER_ONCE
 	var wg sync.WaitGroup
-	sem := make(chan struct{}, maxConcurrency)
+	sem := make(chan struct{}, FETCH_REPOS_PER_ONCE)
 
 	for _, lib := range libs {
 		wg.Add(1)
@@ -101,9 +100,8 @@ func Diagnose(d MedicalTechnician, r io.ReadSeekCloserAt, year int, ignores []st
 		slicedParams = append(slicedParams, fetchRepositoryParams[i:end])
 	}
 
-	maxConcurrency := FETCH_REPOS_PER_ONCE
 	var wg sync.WaitGroup
-	sem := make(chan struct{}, maxConcurrency)
+	sem := make(chan struct{}, FETCH_REPOS_PER_ONCE)
 	for _, params := range slicedParams {
 		wg.Add(1)
 		sem <- struct{}{}
