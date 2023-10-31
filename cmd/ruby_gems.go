@@ -53,5 +53,5 @@ func (g *RubyGems) fetchURLFromRegistry(client http.Client) (string, error) {
 		return Gem.HomepageUri, nil
 	}
 
-	return "", nil
+	return "", errors.New("source code URL is not found")
 }

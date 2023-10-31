@@ -2,7 +2,6 @@ package github
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -39,6 +38,7 @@ type FetchRepositoryParam struct {
 	Repo        string
 	Owner       string
 	CanSearch   bool
+	Error       error
 }
 
 func (n FetchRepositoryParam) QueryWord() string {
@@ -51,12 +51,12 @@ type GitHubURL struct {
 
 func (githuburl GitHubURL) Parse() (string, string, error) {
 	if githuburl.URL == "" {
-		return "", "", errors.New("error: Blank URL")
+		return "", "", fmt.Errorf("source code URL is blank")
 	}
 
 	u, err := giturls.Parse(githuburl.URL)
 	if err != nil {
-		return "", "", errors.New("error: Unknown URL")
+		return "", "", fmt.Errorf("unknown source code URL: %s", githuburl.URL)
 	}
 
 	var owner, repo string
@@ -66,7 +66,7 @@ func (githuburl GitHubURL) Parse() (string, string, error) {
 		repo = strings.Replace(paths[1], ".git", "", 1)
 	} else if u.Scheme == "https" || u.Scheme == "http" {
 		if len(paths) < 3 {
-			return "", "", errors.New("error: Unknown URL")
+			return "", "", fmt.Errorf("unknown source code URL: %s", githuburl.URL)
 		}
 		owner = paths[1]
 		repo = strings.Replace(paths[2], ".git", "", 1)
@@ -78,7 +78,10 @@ func (githuburl GitHubURL) Parse() (string, string, error) {
 			owner = paths[3]
 			repo = strings.Replace(paths[4], ".git", "", 1)
 		}
+	} else {
+		return "", "", fmt.Errorf("unknown source code URL: %s", githuburl.URL)
 	}
+
 	return owner, repo, nil
 }
 

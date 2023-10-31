@@ -32,6 +32,14 @@ type Diagnosis struct {
 	Ignored   bool
 	Diagnosed bool
 	IsActive  bool
+	Error     error
+}
+
+func (d *Diagnosis) ErrorMessage() string {
+	if d.Error == nil {
+		return ""
+	}
+	return fmt.Sprintf("%s", d.Error)
 }
 
 type MedicalTechnician interface {
@@ -39,7 +47,19 @@ type MedicalTechnician interface {
 	SourceCodeURL(lib types.Library) (string, error)
 }
 
-func FetchRepositoryParams(libs []types.Library, g MedicalTechnician) []github.FetchRepositoryParam {
+type RepositoryParams []github.FetchRepositoryParam
+
+func (p RepositoryParams) CanSearchParams() []github.FetchRepositoryParam {
+	params := []github.FetchRepositoryParam{}
+	for _, param := range p {
+		if param.CanSearch {
+			params = append(params, param)
+		}
+	}
+	return params
+}
+
+func FetchRepositoryParams(libs []types.Library, g MedicalTechnician) RepositoryParams {
 	var params []github.FetchRepositoryParam
 	var wg sync.WaitGroup
 	sem := make(chan struct{}, FETCH_REPOS_PER_ONCE)
@@ -55,6 +75,13 @@ func FetchRepositoryParams(libs []types.Library, g MedicalTechnician) []github.F
 
 			url, err := g.SourceCodeURL(lib)
 			if err != nil {
+				params = append(params,
+					github.FetchRepositoryParam{
+						PackageName: lib.Name,
+						CanSearch:   false,
+						Error:       err,
+					},
+				)
 				return
 			}
 
@@ -64,6 +91,7 @@ func FetchRepositoryParams(libs []types.Library, g MedicalTechnician) []github.F
 					github.FetchRepositoryParam{
 						PackageName: lib.Name,
 						CanSearch:   false,
+						Error:       err,
 					},
 				)
 				return
@@ -90,14 +118,15 @@ func Diagnose(d MedicalTechnician, r io.ReadSeekCloserAt, year int, ignores []st
 	slicedParams := [][]github.FetchRepositoryParam{}
 	libs := d.Libraries(r)
 	fetchRepositoryParams := FetchRepositoryParams(libs, d)
-	sliceSize := len(fetchRepositoryParams)
+	canSearchRepositoryParams := fetchRepositoryParams.CanSearchParams()
+	sliceSize := len(canSearchRepositoryParams)
 
 	for i := 0; i < sliceSize; i += github.SEARCH_REPOS_PER_ONCE {
 		end := i + github.SEARCH_REPOS_PER_ONCE
 		if sliceSize < end {
 			end = sliceSize
 		}
-		slicedParams = append(slicedParams, fetchRepositoryParams[i:end])
+		slicedParams = append(slicedParams, canSearchRepositoryParams[i:end])
 	}
 
 	var wg sync.WaitGroup
@@ -135,6 +164,7 @@ func Diagnose(d MedicalTechnician, r io.ReadSeekCloserAt, year int, ignores []st
 		diagnosis := Diagnosis{
 			Name:      fetchRepositoryParam.PackageName,
 			Diagnosed: false,
+			Error:     fetchRepositoryParam.Error,
 		}
 		diagnoses[fetchRepositoryParam.PackageName] = diagnosis
 	}
@@ -225,7 +255,7 @@ func Report(diagnoses map[string]Diagnosis) error {
 		}
 
 		if !diagnosis.Diagnosed {
-			warnMessages = append(warnMessages, fmt.Sprintf("[warn] %s (unknown):", diagnosis.Name))
+			warnMessages = append(warnMessages, fmt.Sprintf("[warn] %s (unknown): %s", diagnosis.Name, diagnosis.ErrorMessage()))
 			unDiagnosedCount += 1
 			warnCount += 1
 			continue
