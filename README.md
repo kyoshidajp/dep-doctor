@@ -12,15 +12,16 @@ However, some packages have archived their source code repositories or have had 
 
 | language | package manager | file (e.g.) | status |
 | -------- | ------------- | -- | :----: |
-| Ruby | bundler | Gemfile.lock | :heavy_check_mark: |
-| JavaScript | yarn | yarn.lock | :heavy_check_mark: |
-| JavaScript | npm | package-lock.json | :heavy_check_mark: |
-| Python | pip | requirements.txt | :heavy_check_mark: |
-| Python | poetry | poetry.lock | (later) |
-| Python | pipenv | Pipfile.lock | (later) |
-| PHP | composer | composer.lock | :heavy_check_mark: |
 | Go | golang | go.mod | :heavy_check_mark: |
+| JavaScript | npm | package-lock.json | :heavy_check_mark: |
+| JavaScript | yarn | yarn.lock | :heavy_check_mark: |
+| PHP | composer | composer.lock | :heavy_check_mark: |
+| Python | pip | requirements.txt | :heavy_check_mark: |
+| Python | pipenv | Pipfile.lock | (later) |
+| Python | poetry | poetry.lock | (later) |
+| Ruby | bundler | Gemfile.lock | :heavy_check_mark: |
 | Rust | cargo | Cargo.lock | :heavy_check_mark: |
+| Swift | cocoapods | Podfile.lock | :heavy_check_mark: |
 
 ## Support repository hosting services
 
