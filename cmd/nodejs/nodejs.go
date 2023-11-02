@@ -1,4 +1,4 @@
-package cmd
+package nodejs
 
 import (
 	"encoding/json"
@@ -37,7 +37,7 @@ func (n *Nodejs) fetchURLFromRegistry(client http.Client) (string, error) {
 
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || 299 < resp.StatusCode {
-		m := fmt.Sprintf("Got status code: %d from %s", resp.StatusCode, RUBY_GEMS_REGISTRY_API)
+		m := fmt.Sprintf("Got status code: %d from %s", resp.StatusCode, NODEJS_REGISTRY_API)
 		return "", errors.New(m)
 	}
 

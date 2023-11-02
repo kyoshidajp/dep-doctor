@@ -1,4 +1,4 @@
-package cmd
+package nodejs
 
 import (
 	"net/http"

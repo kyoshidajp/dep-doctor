@@ -1,4 +1,4 @@
-package cmd
+package python
 
 import (
 	"net/http"

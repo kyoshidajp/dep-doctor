@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/kyoshidajp/dep-doctor/cmd/ruby"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -65,7 +66,7 @@ func TestDiagnose(t *testing.T) {
 		require.NoError(t, err)
 		defer f.Close()
 
-		doctor := NewBundlerDoctor()
+		doctor := ruby.NewBundlerDoctor()
 		ignores := []string{"i18n"}
 		diagnoses := Diagnose(doctor, f, 2, ignores)
 		assert.Equal(t, expect, diagnoses)

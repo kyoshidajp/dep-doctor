@@ -15,6 +15,13 @@ import (
 	"github.com/aquasecurity/go-dep-parser/pkg/types"
 	"github.com/fatih/color"
 	"github.com/kyoshidajp/dep-doctor/cmd/github"
+	"github.com/kyoshidajp/dep-doctor/cmd/golang"
+	"github.com/kyoshidajp/dep-doctor/cmd/nodejs"
+	"github.com/kyoshidajp/dep-doctor/cmd/php"
+	"github.com/kyoshidajp/dep-doctor/cmd/python"
+	"github.com/kyoshidajp/dep-doctor/cmd/ruby"
+	"github.com/kyoshidajp/dep-doctor/cmd/rust"
+	"github.com/kyoshidajp/dep-doctor/cmd/swift"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/slices"
 )
@@ -204,14 +211,14 @@ func (d Doctors) UnknownErrorMessage(packageManager string) string {
 }
 
 var doctors = Doctors{
-	"bundler":   NewBundlerDoctor(),
-	"yarn":      NewYarnDoctor(),
-	"pip":       NewPipDoctor(),
-	"npm":       NewNPMDoctor(),
-	"composer":  NewComposerDoctor(),
-	"golang":    NewGolangDoctor(),
-	"cargo":     NewCargoDoctor(),
-	"cocoapods": NewCococaPodsDoctor(),
+	"bundler":   ruby.NewBundlerDoctor(),
+	"yarn":      nodejs.NewYarnDoctor(),
+	"pip":       python.NewPipDoctor(),
+	"npm":       nodejs.NewNPMDoctor(),
+	"composer":  php.NewComposerDoctor(),
+	"golang":    golang.NewGolangDoctor(),
+	"cargo":     rust.NewCargoDoctor(),
+	"cocoapods": swift.NewCococaPodsDoctor(),
 }
 
 var diagnoseCmd = &cobra.Command{

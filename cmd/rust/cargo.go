@@ -1,4 +1,4 @@
-package cmd
+package rust
 
 import (
 	"net/http"
