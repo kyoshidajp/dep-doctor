@@ -49,7 +49,7 @@ func (d *Diagnosis) ErrorMessage() string {
 	return fmt.Sprintf("%s", d.Error)
 }
 
-type MedicalTechnician interface {
+type Doctor interface {
 	Libraries(r parser_io.ReadSeekerAt) []types.Library
 	SourceCodeURL(lib types.Library) (string, error)
 }
@@ -66,7 +66,7 @@ func (p RepositoryParams) SearchableParams() []github.FetchRepositoryParam {
 	return params
 }
 
-func FetchRepositoryParams(libs []types.Library, g MedicalTechnician) RepositoryParams {
+func FetchRepositoryParams(libs []types.Library, d Doctor) RepositoryParams {
 	var params []github.FetchRepositoryParam
 	var wg sync.WaitGroup
 	sem := make(chan struct{}, FETCH_REPOS_PER_ONCE)
@@ -80,7 +80,7 @@ func FetchRepositoryParams(libs []types.Library, g MedicalTechnician) Repository
 
 			fmt.Printf("%s\n", lib.Name)
 
-			url, err := g.SourceCodeURL(lib)
+			url, err := d.SourceCodeURL(lib)
 			if err != nil {
 				params = append(params,
 					github.FetchRepositoryParam{
@@ -120,7 +120,7 @@ func FetchRepositoryParams(libs []types.Library, g MedicalTechnician) Repository
 	return params
 }
 
-func Diagnose(d MedicalTechnician, r io.ReadSeekCloserAt, year int, ignores []string) map[string]Diagnosis {
+func Diagnose(d Doctor, r io.ReadSeekCloserAt, year int, ignores []string) map[string]Diagnosis {
 	diagnoses := make(map[string]Diagnosis)
 	slicedParams := [][]github.FetchRepositoryParam{}
 	libs := d.Libraries(r)
@@ -193,7 +193,7 @@ var (
 	o = &Options{}
 )
 
-type Doctors map[string]MedicalTechnician
+type Doctors map[string]Doctor
 
 func (d Doctors) PackageManagers() []string {
 	packages := []string{}
