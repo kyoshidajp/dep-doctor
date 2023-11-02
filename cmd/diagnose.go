@@ -186,7 +186,23 @@ var (
 	o = &Options{}
 )
 
-var doctors = map[string]MedicalTechnician{
+type Doctors map[string]MedicalTechnician
+
+func (d Doctors) PackageManagers() []string {
+	packages := []string{}
+	for p := range d {
+		packages = append(packages, p)
+	}
+	return packages
+}
+
+func (d Doctors) UnknownErrorMessage(packageManager string) string {
+	return fmt.Sprintf("Unknown package manager: %s. You can choose from [%s]",
+		packageManager,
+		strings.Join(d.PackageManagers(), ", "))
+}
+
+var doctors = Doctors{
 	"bundler":   NewBundlerDoctor(),
 	"yarn":      NewYarnDoctor(),
 	"pip":       NewPipDoctor(),
@@ -203,11 +219,7 @@ var diagnoseCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		doctor, ok := doctors[o.packageManager]
 		if !ok {
-			packages := []string{}
-			for p := range doctors {
-				packages = append(packages, p)
-			}
-			m := fmt.Sprintf("Unknown package manager: %s. You can choose from [%s]", o.packageManager, strings.Join(packages, ", "))
+			m := doctors.UnknownErrorMessage(o.packageManager)
 			log.Fatal(m)
 		}
 

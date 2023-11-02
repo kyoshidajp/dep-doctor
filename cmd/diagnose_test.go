@@ -71,3 +71,69 @@ func TestDiagnose(t *testing.T) {
 		assert.Equal(t, expect, diagnoses)
 	})
 }
+
+func TestDoctors_PackageManagers(t *testing.T) {
+	tests := []struct {
+		name    string
+		doctors Doctors
+	}{
+		{
+			name: "doctors",
+			doctors: Doctors{
+				"package1": nil,
+				"package2": nil,
+				"package3": nil,
+			},
+		},
+	}
+	expects := []struct {
+		name     string
+		packages []string
+	}{
+		{
+			name:     "doctors",
+			packages: []string{"package1", "package2", "package3"},
+		},
+	}
+
+	for i, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual := tt.doctors.PackageManagers()
+			expect := expects[i].packages
+			assert.Equal(t, expect, actual)
+		})
+	}
+}
+
+func TestDoctors_UnknownErrorMessage(t *testing.T) {
+	tests := []struct {
+		name    string
+		doctors Doctors
+	}{
+		{
+			name: "doctors",
+			doctors: Doctors{
+				"p1": nil,
+				"p2": nil,
+				"p3": nil,
+			},
+		},
+	}
+	expects := []struct {
+		name    string
+		message string
+	}{
+		{
+			name:    "doctors",
+			message: "Unknown package manager: xxx. You can choose from [p1, p2, p3]",
+		},
+	}
+
+	for i, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual := tt.doctors.UnknownErrorMessage("xxx")
+			expect := expects[i].message
+			assert.Equal(t, expect, actual)
+		})
+	}
+}
