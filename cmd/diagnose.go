@@ -193,6 +193,7 @@ func (d Doctors) PackageManagers() []string {
 	for p := range d {
 		packages = append(packages, p)
 	}
+	sort.Strings(packages)
 	return packages
 }
 
