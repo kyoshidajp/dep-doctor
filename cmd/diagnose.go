@@ -56,10 +56,10 @@ type MedicalTechnician interface {
 
 type RepositoryParams []github.FetchRepositoryParam
 
-func (p RepositoryParams) CanSearchParams() []github.FetchRepositoryParam {
+func (p RepositoryParams) SearchableParams() []github.FetchRepositoryParam {
 	params := []github.FetchRepositoryParam{}
 	for _, param := range p {
-		if param.CanSearch {
+		if param.Searchable {
 			params = append(params, param)
 		}
 	}
@@ -85,7 +85,7 @@ func FetchRepositoryParams(libs []types.Library, g MedicalTechnician) Repository
 				params = append(params,
 					github.FetchRepositoryParam{
 						PackageName: lib.Name,
-						CanSearch:   false,
+						Searchable:  false,
 						Error:       err,
 					},
 				)
@@ -97,7 +97,7 @@ func FetchRepositoryParams(libs []types.Library, g MedicalTechnician) Repository
 				params = append(params,
 					github.FetchRepositoryParam{
 						PackageName: lib.Name,
-						CanSearch:   false,
+						Searchable:  false,
 						Error:       err,
 					},
 				)
@@ -109,7 +109,7 @@ func FetchRepositoryParams(libs []types.Library, g MedicalTechnician) Repository
 					Repo:        repo.Repo,
 					Owner:       repo.Owner,
 					PackageName: lib.Name,
-					CanSearch:   true,
+					Searchable:  true,
 				},
 			)
 		}(lib)
@@ -125,15 +125,15 @@ func Diagnose(d MedicalTechnician, r io.ReadSeekCloserAt, year int, ignores []st
 	slicedParams := [][]github.FetchRepositoryParam{}
 	libs := d.Libraries(r)
 	fetchRepositoryParams := FetchRepositoryParams(libs, d)
-	canSearchRepositoryParams := fetchRepositoryParams.CanSearchParams()
-	sliceSize := len(canSearchRepositoryParams)
+	searchableRepositoryParams := fetchRepositoryParams.SearchableParams()
+	sliceSize := len(searchableRepositoryParams)
 
 	for i := 0; i < sliceSize; i += github.SEARCH_REPOS_PER_ONCE {
 		end := i + github.SEARCH_REPOS_PER_ONCE
 		if sliceSize < end {
 			end = sliceSize
 		}
-		slicedParams = append(slicedParams, canSearchRepositoryParams[i:end])
+		slicedParams = append(slicedParams, searchableRepositoryParams[i:end])
 	}
 
 	var wg sync.WaitGroup
@@ -164,7 +164,7 @@ func Diagnose(d MedicalTechnician, r io.ReadSeekCloserAt, year int, ignores []st
 	wg.Wait()
 
 	for _, fetchRepositoryParam := range fetchRepositoryParams {
-		if fetchRepositoryParam.CanSearch {
+		if fetchRepositoryParam.Searchable {
 			continue
 		}
 

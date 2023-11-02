@@ -37,7 +37,7 @@ type FetchRepositoryParam struct {
 	PackageName string
 	Repo        string
 	Owner       string
-	CanSearch   bool
+	Searchable  bool
 	Error       error
 }
 
