@@ -3,4 +3,7 @@
 .env
 .envrc
 
+cover.html
+cover.out
+
 dep-doctor
