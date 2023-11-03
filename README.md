@@ -17,7 +17,7 @@ However, some libraries have archived their source code repositories or have had
 | JavaScript | yarn | yarn.lock | :heavy_check_mark: |
 | PHP | composer | composer.lock | :heavy_check_mark: |
 | Python | pip | requirements.txt | :heavy_check_mark: |
-| Python | pipenv | Pipfile.lock | (later) |
+| Python | pipenv | Pipfile.lock | :heavy_check_mark: |
 | Python | poetry | poetry.lock | (later) |
 | Ruby | bundler | Gemfile.lock | :heavy_check_mark: |
 | Rust | cargo | Cargo.lock | :heavy_check_mark: |

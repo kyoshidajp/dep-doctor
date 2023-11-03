@@ -215,6 +215,7 @@ var doctors = Doctors{
 	"bundler":   ruby.NewBundlerDoctor(),
 	"yarn":      nodejs.NewYarnDoctor(),
 	"pip":       python.NewPipDoctor(),
+	"pipenv":    python.NewPipenvDoctor(),
 	"npm":       nodejs.NewNPMDoctor(),
 	"composer":  php.NewComposerDoctor(),
 	"golang":    golang.NewGolangDoctor(),
