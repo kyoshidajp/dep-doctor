@@ -157,6 +157,7 @@ func Diagnose(d Doctor, r io.ReadSeekCloserAt, year int, ignores []string) map[s
 					Ignored:   isIgnore,
 					Diagnosed: true,
 					IsActive:  r.IsActive(year),
+					Error:     r.Error,
 				}
 				diagnoses[r.Name] = diagnosis
 			}
@@ -287,6 +288,12 @@ func Report(diagnoses map[string]Diagnosis, strict_mode bool) error {
 			ignoredMessages = append(ignoredMessages, fmt.Sprintf("[info] %s (ignored):", diagnosis.Name))
 			ignoredCount += 1
 			infoCount += 1
+			continue
+		}
+
+		if diagnosis.Error != nil {
+			errMessages = append(errMessages, fmt.Sprintf("[error] %s: %s", diagnosis.Name, diagnosis.Error))
+			errCount += 1
 			continue
 		}
 

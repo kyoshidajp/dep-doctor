@@ -25,6 +25,7 @@ type GitHubRepository struct {
 	URL             string
 	Archived        bool
 	LastCommittedAt time.Time
+	Error           error
 }
 
 func (r GitHubRepository) IsActive(year int) bool {
@@ -152,8 +153,15 @@ func FetchFromGitHub(params []FetchRepositoryParam) []GitHubRepository {
 	}
 
 	repos := []GitHubRepository{}
+
 	err := client.Query(context.Background(), &query, variables)
 	if err != nil {
+		for _, param := range params {
+			repos = append(repos, GitHubRepository{
+				Name:  param.PackageName,
+				Error: err,
+			})
+		}
 		return repos
 	}
 
