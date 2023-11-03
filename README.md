@@ -12,6 +12,7 @@ However, some libraries have archived their source code repositories or have had
 
 | language | package manager | dependencies file (e.g.) | status |
 | -------- | ------------- | -- | :----: |
+| Dart | pub | pubspec.lock | :heavy_check_mark: |
 | Go | golang | go.mod | :heavy_check_mark: |
 | JavaScript | npm | package-lock.json | :heavy_check_mark: |
 | JavaScript | yarn | yarn.lock | :heavy_check_mark: |
