@@ -183,6 +183,7 @@ type Options struct {
 	filePath       string
 	ignores        string
 	year           int
+	strict         bool
 }
 
 func (o *Options) Ignores() []string {
@@ -242,7 +243,7 @@ var diagnoseCmd = &cobra.Command{
 		}
 
 		diagnoses := Diagnose(doctor, f, o.year, o.Ignores())
-		if err := Report(diagnoses); err != nil {
+		if err := Report(diagnoses, o.strict); err != nil {
 			os.Exit(1)
 		}
 	},
@@ -254,6 +255,7 @@ func init() {
 	diagnoseCmd.Flags().StringVarP(&o.filePath, "file", "f", "", "dependencies file path")
 	diagnoseCmd.Flags().StringVarP(&o.ignores, "ignores", "i", "", "ignore dependencies (separated by a space)")
 	diagnoseCmd.Flags().IntVarP(&o.year, "year", "y", MAX_YEAR_TO_BE_BLANK, "max years of inactivity")
+	diagnoseCmd.PersistentFlags().BoolVarP(&o.strict, "strict", "", false, "exit with non-zero if warnings exist")
 
 	if err := diagnoseCmd.MarkFlagRequired("package"); err != nil {
 		fmt.Println(err.Error())
@@ -263,7 +265,7 @@ func init() {
 	}
 }
 
-func Report(diagnoses map[string]Diagnosis) error {
+func Report(diagnoses map[string]Diagnosis, strict_mode bool) error {
 	errMessages, warnMessages, ignoredMessages := []string{}, []string{}, []string{}
 	errCount, warnCount, infoCount := 0, 0, 0
 	unDiagnosedCount, ignoredCount := 0, 0
@@ -319,7 +321,7 @@ func Report(diagnoses map[string]Diagnosis) error {
 		infoCount, ignoredCount),
 	)
 
-	if len(errMessages) > 0 {
+	if len(errMessages) > 0 || strict_mode && warnCount > 0 {
 		return errors.New("has error")
 	}
 

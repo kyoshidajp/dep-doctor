@@ -49,12 +49,12 @@ Usage:
   dep-doctor diagnose [flags]
 
 Flags:
-  -f, --file string      dependencies file path (default "Gemfile.lock")
+  -f, --file string      dependencies file path
   -h, --help             help for diagnose
   -i, --ignores string   ignore dependencies (separated by a space)
-  -p, --package string   package manager (default "bundler")
+  -p, --package string   package manager
+      --strict           exit with non-zero if warnings exist
   -y, --year int         max years of inactivity (default 5)
-
 ```
 
 For example:
