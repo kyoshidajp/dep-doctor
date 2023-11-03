@@ -69,7 +69,8 @@ func TestDiagnose(t *testing.T) {
 
 		doctor := ruby.NewBundlerDoctor()
 		ignores := []string{"i18n"}
-		diagnoses := Diagnose(doctor, f, 2, ignores)
+		cache := map[string]string{}
+		diagnoses := Diagnose(doctor, f, 2, ignores, cache)
 		assert.Equal(t, expect, diagnoses)
 	})
 }

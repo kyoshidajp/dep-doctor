@@ -75,7 +75,7 @@ func Prepare() error {
 	return nil
 }
 
-func FetchRepositoryParams(libs []types.Library, d Doctor) RepositoryParams {
+func FetchRepositoryParams(libs []types.Library, d Doctor, cache map[string]string) RepositoryParams {
 	var params []github.FetchRepositoryParam
 	var wg sync.WaitGroup
 	sem := make(chan struct{}, FETCH_REPOS_PER_ONCE)
@@ -89,16 +89,21 @@ func FetchRepositoryParams(libs []types.Library, d Doctor) RepositoryParams {
 
 			fmt.Printf("%s\n", lib.Name)
 
-			url, err := d.SourceCodeURL(lib)
-			if err != nil {
-				params = append(params,
-					github.FetchRepositoryParam{
-						PackageName: lib.Name,
-						Searchable:  false,
-						Error:       err,
-					},
-				)
-				return
+			var url string
+			url, ok := cache[lib.Name]
+			if !ok {
+				var err error
+				url, err = d.SourceCodeURL(lib)
+				if err != nil {
+					params = append(params,
+						github.FetchRepositoryParam{
+							PackageName: lib.Name,
+							Searchable:  false,
+							Error:       err,
+						},
+					)
+					return
+				}
 			}
 
 			repo, err := github.ParseGitHubURL(url)
@@ -129,11 +134,11 @@ func FetchRepositoryParams(libs []types.Library, d Doctor) RepositoryParams {
 	return params
 }
 
-func Diagnose(d Doctor, r io.ReadSeekCloserAt, year int, ignores []string) map[string]Diagnosis {
+func Diagnose(d Doctor, r io.ReadSeekCloserAt, year int, ignores []string, cache map[string]string) map[string]Diagnosis {
 	diagnoses := make(map[string]Diagnosis)
 	slicedParams := [][]github.FetchRepositoryParam{}
 	libs := d.Libraries(r)
-	fetchRepositoryParams := FetchRepositoryParams(libs, d)
+	fetchRepositoryParams := FetchRepositoryParams(libs, d, cache)
 	searchableRepositoryParams := fetchRepositoryParams.SearchableParams()
 	sliceSize := len(searchableRepositoryParams)
 
@@ -264,7 +269,13 @@ var diagnoseCmd = &cobra.Command{
 			log.Fatal(m)
 		}
 
-		diagnoses := Diagnose(doctor, f, o.year, o.Ignores())
+		cacheStore := BuildCacheStore()
+		cache := cacheStore.URLbyPackageManager(o.packageManager)
+		diagnoses := Diagnose(doctor, f, o.year, o.Ignores(), cache)
+		if err := SaveCache(diagnoses, cacheStore, o.packageManager); err != nil {
+			log.Fatal(err)
+		}
+
 		if err := Report(diagnoses, o.strict); err != nil {
 			os.Exit(1)
 		}
