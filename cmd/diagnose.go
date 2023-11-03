@@ -255,8 +255,12 @@ func init() {
 	diagnoseCmd.Flags().StringVarP(&o.ignores, "ignores", "i", "", "ignore dependencies (separated by a space)")
 	diagnoseCmd.Flags().IntVarP(&o.year, "year", "y", MAX_YEAR_TO_BE_BLANK, "max years of inactivity")
 
-	diagnoseCmd.MarkFlagRequired("package")
-	diagnoseCmd.MarkFlagRequired("file")
+	if err := diagnoseCmd.MarkFlagRequired("package"); err != nil {
+		fmt.Println(err.Error())
+	}
+	if err := diagnoseCmd.MarkFlagRequired("file"); err != nil {
+		fmt.Println(err.Error())
+	}
 }
 
 func Report(diagnoses map[string]Diagnosis) error {
