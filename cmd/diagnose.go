@@ -14,6 +14,7 @@ import (
 	parser_io "github.com/aquasecurity/go-dep-parser/pkg/io"
 	"github.com/aquasecurity/go-dep-parser/pkg/types"
 	"github.com/fatih/color"
+	dart "github.com/kyoshidajp/dep-doctor/cmd/dart/pub"
 	"github.com/kyoshidajp/dep-doctor/cmd/github"
 	"github.com/kyoshidajp/dep-doctor/cmd/golang"
 	"github.com/kyoshidajp/dep-doctor/cmd/nodejs"
@@ -216,6 +217,7 @@ var doctors = Doctors{
 	"yarn":      nodejs.NewYarnDoctor(),
 	"pip":       python.NewPipDoctor(),
 	"pipenv":    python.NewPipenvDoctor(),
+	"pub":       dart.NewPubDoctor(),
 	"npm":       nodejs.NewNPMDoctor(),
 	"composer":  php.NewComposerDoctor(),
 	"golang":    golang.NewGolangDoctor(),
