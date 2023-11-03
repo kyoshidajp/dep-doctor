@@ -1,4 +1,4 @@
-package cmd
+package swift
 
 import (
 	"crypto/md5"

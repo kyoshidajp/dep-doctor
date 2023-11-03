@@ -1,4 +1,4 @@
-package cmd
+package php
 
 import (
 	"net/http"
@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNodejs_fetchURLFromRegistry(t *testing.T) {
+func TestPackagist_fetchURLFromRegistry(t *testing.T) {
 	tests := []struct {
 		name string
 		lib  types.Library
@@ -17,7 +17,7 @@ func TestNodejs_fetchURLFromRegistry(t *testing.T) {
 		{
 			name: "source_code_uri exists",
 			lib: types.Library{
-				Name: "react",
+				Name: "laravel/laravel",
 			},
 		},
 	}
@@ -27,14 +27,14 @@ func TestNodejs_fetchURLFromRegistry(t *testing.T) {
 	}{
 		{
 			name: "source_code_uri exists",
-			url:  "git+https://github.com/facebook/react",
+			url:  "https://github.com/laravel/laravel",
 		},
 	}
 
 	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			n := Nodejs{lib: tt.lib}
-			r, _ := n.fetchURLFromRegistry(http.Client{})
+			p := Packagist{lib: tt.lib}
+			r, _ := p.fetchURLFromRegistry(http.Client{})
 			expect := expects[i]
 			assert.Equal(t, true, strings.HasPrefix(r, expect.url))
 		})

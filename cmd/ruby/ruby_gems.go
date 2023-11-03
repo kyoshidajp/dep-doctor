@@ -1,4 +1,4 @@
-package cmd
+package ruby
 
 import (
 	"encoding/json"

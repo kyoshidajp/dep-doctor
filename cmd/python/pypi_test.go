@@ -1,4 +1,4 @@
-package cmd
+package python
 
 import (
 	"net/http"
@@ -13,8 +13,12 @@ func TestPyPi_fetchURLFromRegistry(t *testing.T) {
 		lib_name string
 	}{
 		{
-			name:     "source_code_uri exists",
+			name:     "info.project_urls.Source_Code exists",
 			lib_name: "pip",
+		},
+		{
+			name:     "not found",
+			lib_name: "not-found-xxxx",
 		},
 	}
 	expects := []struct {
@@ -22,8 +26,12 @@ func TestPyPi_fetchURLFromRegistry(t *testing.T) {
 		url  string
 	}{
 		{
-			name: "source_code_uri exists",
+			name: "info.project_urls.Source_Code exists",
 			url:  "https://github.com/pypa/pip",
+		},
+		{
+			name: "not found",
+			url:  "",
 		},
 	}
 

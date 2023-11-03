@@ -1,16 +1,16 @@
 # dep-doctor
 
-`dep-doctor` is a tool to diagnose whether your software dependency packages are maintained.
+`dep-doctor` is a tool to diagnose whether your software dependency libraries are maintained.
 
-Today, most software relies heavily on external packages. Vulnerabilities in those packages can be detected by vulnerability scanners ([dependabot](https://docs.github.com/en/code-security/dependabot), [trivy](https://aquasecurity.github.io/trivy), [Grype](https://github.com/anchore/grype), etc) if they are publicly available.
+Today, most software relies heavily on external libraries. Vulnerabilities in those libraries can be detected by vulnerability scanners ([dependabot](https://docs.github.com/en/code-security/dependabot), [trivy](https://aquasecurity.github.io/trivy), [Grype](https://github.com/anchore/grype), etc) if they are publicly available.
 
-However, some packages have archived their source code repositories or have had their development stopped, although not explicitly. `dep-doctor` will notify you of those packages in the dependencies files.
+However, some libraries have archived their source code repositories or have had their development stopped, although not explicitly. `dep-doctor` will notify you of those libraries in the dependencies file.
 
 ![overview](doc/images/dep-doctor_overview.png "dep-doctor overview")
 
 ## Support dependencies files
 
-| language | package manager | file (e.g.) | status |
+| language | package manager | dependencies file (e.g.) | status |
 | -------- | ------------- | -- | :----: |
 | Go | golang | go.mod | :heavy_check_mark: |
 | JavaScript | npm | package-lock.json | :heavy_check_mark: |
@@ -49,11 +49,12 @@ Usage:
   dep-doctor diagnose [flags]
 
 Flags:
-  -h, --help               help for diagnose
-  -i, --ignores string     ignore dependencies (separated by a space)
-  -f, --lock_file string   lock file path (default "Gemfile.lock")
-  -p, --package string     package manager (default "bundler")
-  -y, --year int           max years of inactivity (default 5)
+  -f, --file string      dependencies file path (default "Gemfile.lock")
+  -h, --help             help for diagnose
+  -i, --ignores string   ignore dependencies (separated by a space)
+  -p, --package string   package manager (default "bundler")
+  -y, --year int         max years of inactivity (default 5)
+
 ```
 
 For example:
@@ -80,7 +81,7 @@ Diagnosis completed! 6 dependencies.
 | *warn* | Source code repository is not active or unknown. |
 | *info* | Other reasons. (specified to be ignored) | |
 
-## How works
+## How it works
 
 ![how_works](doc/images/how_works.png "dep-doctor how works")
 

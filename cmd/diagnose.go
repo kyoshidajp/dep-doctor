@@ -15,6 +15,13 @@ import (
 	"github.com/aquasecurity/go-dep-parser/pkg/types"
 	"github.com/fatih/color"
 	"github.com/kyoshidajp/dep-doctor/cmd/github"
+	"github.com/kyoshidajp/dep-doctor/cmd/golang"
+	"github.com/kyoshidajp/dep-doctor/cmd/nodejs"
+	"github.com/kyoshidajp/dep-doctor/cmd/php"
+	"github.com/kyoshidajp/dep-doctor/cmd/python"
+	"github.com/kyoshidajp/dep-doctor/cmd/ruby"
+	"github.com/kyoshidajp/dep-doctor/cmd/rust"
+	"github.com/kyoshidajp/dep-doctor/cmd/swift"
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/slices"
 )
@@ -42,24 +49,24 @@ func (d *Diagnosis) ErrorMessage() string {
 	return fmt.Sprintf("%s", d.Error)
 }
 
-type MedicalTechnician interface {
+type Doctor interface {
 	Libraries(r parser_io.ReadSeekerAt) []types.Library
 	SourceCodeURL(lib types.Library) (string, error)
 }
 
 type RepositoryParams []github.FetchRepositoryParam
 
-func (p RepositoryParams) CanSearchParams() []github.FetchRepositoryParam {
+func (p RepositoryParams) SearchableParams() []github.FetchRepositoryParam {
 	params := []github.FetchRepositoryParam{}
 	for _, param := range p {
-		if param.CanSearch {
+		if param.Searchable {
 			params = append(params, param)
 		}
 	}
 	return params
 }
 
-func FetchRepositoryParams(libs []types.Library, g MedicalTechnician) RepositoryParams {
+func FetchRepositoryParams(libs []types.Library, d Doctor) RepositoryParams {
 	var params []github.FetchRepositoryParam
 	var wg sync.WaitGroup
 	sem := make(chan struct{}, FETCH_REPOS_PER_ONCE)
@@ -73,12 +80,12 @@ func FetchRepositoryParams(libs []types.Library, g MedicalTechnician) Repository
 
 			fmt.Printf("%s\n", lib.Name)
 
-			url, err := g.SourceCodeURL(lib)
+			url, err := d.SourceCodeURL(lib)
 			if err != nil {
 				params = append(params,
 					github.FetchRepositoryParam{
 						PackageName: lib.Name,
-						CanSearch:   false,
+						Searchable:  false,
 						Error:       err,
 					},
 				)
@@ -90,7 +97,7 @@ func FetchRepositoryParams(libs []types.Library, g MedicalTechnician) Repository
 				params = append(params,
 					github.FetchRepositoryParam{
 						PackageName: lib.Name,
-						CanSearch:   false,
+						Searchable:  false,
 						Error:       err,
 					},
 				)
@@ -102,7 +109,7 @@ func FetchRepositoryParams(libs []types.Library, g MedicalTechnician) Repository
 					Repo:        repo.Repo,
 					Owner:       repo.Owner,
 					PackageName: lib.Name,
-					CanSearch:   true,
+					Searchable:  true,
 				},
 			)
 		}(lib)
@@ -113,20 +120,20 @@ func FetchRepositoryParams(libs []types.Library, g MedicalTechnician) Repository
 	return params
 }
 
-func Diagnose(d MedicalTechnician, r io.ReadSeekCloserAt, year int, ignores []string) map[string]Diagnosis {
+func Diagnose(d Doctor, r io.ReadSeekCloserAt, year int, ignores []string) map[string]Diagnosis {
 	diagnoses := make(map[string]Diagnosis)
 	slicedParams := [][]github.FetchRepositoryParam{}
 	libs := d.Libraries(r)
 	fetchRepositoryParams := FetchRepositoryParams(libs, d)
-	canSearchRepositoryParams := fetchRepositoryParams.CanSearchParams()
-	sliceSize := len(canSearchRepositoryParams)
+	searchableRepositoryParams := fetchRepositoryParams.SearchableParams()
+	sliceSize := len(searchableRepositoryParams)
 
 	for i := 0; i < sliceSize; i += github.SEARCH_REPOS_PER_ONCE {
 		end := i + github.SEARCH_REPOS_PER_ONCE
 		if sliceSize < end {
 			end = sliceSize
 		}
-		slicedParams = append(slicedParams, canSearchRepositoryParams[i:end])
+		slicedParams = append(slicedParams, searchableRepositoryParams[i:end])
 	}
 
 	var wg sync.WaitGroup
@@ -157,7 +164,7 @@ func Diagnose(d MedicalTechnician, r io.ReadSeekCloserAt, year int, ignores []st
 	wg.Wait()
 
 	for _, fetchRepositoryParam := range fetchRepositoryParams {
-		if fetchRepositoryParam.CanSearch {
+		if fetchRepositoryParam.Searchable {
 			continue
 		}
 
@@ -173,7 +180,7 @@ func Diagnose(d MedicalTechnician, r io.ReadSeekCloserAt, year int, ignores []st
 
 type Options struct {
 	packageManager string
-	lockFilePath   string
+	filePath       string
 	ignores        string
 	year           int
 }
@@ -186,15 +193,32 @@ var (
 	o = &Options{}
 )
 
-var doctors = map[string]MedicalTechnician{
-	"bundler":   NewBundlerDoctor(),
-	"yarn":      NewYarnDoctor(),
-	"pip":       NewPipDoctor(),
-	"npm":       NewNPMDoctor(),
-	"composer":  NewComposerDoctor(),
-	"golang":    NewGolangDoctor(),
-	"cargo":     NewCargoDoctor(),
-	"cocoapods": NewCococaPodsDoctor(),
+type Doctors map[string]Doctor
+
+func (d Doctors) PackageManagers() []string {
+	packages := []string{}
+	for p := range d {
+		packages = append(packages, p)
+	}
+	sort.Strings(packages)
+	return packages
+}
+
+func (d Doctors) UnknownErrorMessage(packageManager string) string {
+	return fmt.Sprintf("Unknown package manager: %s. You can choose from [%s]",
+		packageManager,
+		strings.Join(d.PackageManagers(), ", "))
+}
+
+var doctors = Doctors{
+	"bundler":   ruby.NewBundlerDoctor(),
+	"yarn":      nodejs.NewYarnDoctor(),
+	"pip":       python.NewPipDoctor(),
+	"npm":       nodejs.NewNPMDoctor(),
+	"composer":  php.NewComposerDoctor(),
+	"golang":    golang.NewGolangDoctor(),
+	"cargo":     rust.NewCargoDoctor(),
+	"cocoapods": swift.NewCococaPodsDoctor(),
 }
 
 var diagnoseCmd = &cobra.Command{
@@ -203,21 +227,17 @@ var diagnoseCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		doctor, ok := doctors[o.packageManager]
 		if !ok {
-			packages := []string{}
-			for p := range doctors {
-				packages = append(packages, p)
-			}
-			m := fmt.Sprintf("Unknown package manager: %s. You can choose from [%s]", o.packageManager, strings.Join(packages, ", "))
+			m := doctors.UnknownErrorMessage(o.packageManager)
 			log.Fatal(m)
 		}
 
-		lockFilePath := o.lockFilePath
-		f, err := os.Open(lockFilePath)
+		filePath := o.filePath
+		f, err := os.Open(filePath)
 		defer func() {
 			_ = f.Close()
 		}()
 		if err != nil {
-			m := fmt.Sprintf("Can't open: %s.", o.lockFilePath)
+			m := fmt.Sprintf("Can't open: %s.", o.filePath)
 			log.Fatal(m)
 		}
 
@@ -230,10 +250,17 @@ var diagnoseCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(diagnoseCmd)
-	diagnoseCmd.Flags().StringVarP(&o.packageManager, "package", "p", "bundler", "package manager")
-	diagnoseCmd.Flags().StringVarP(&o.lockFilePath, "lock_file", "f", "Gemfile.lock", "lock file path")
+	diagnoseCmd.Flags().StringVarP(&o.packageManager, "package", "p", "", "package manager")
+	diagnoseCmd.Flags().StringVarP(&o.filePath, "file", "f", "", "dependencies file path")
 	diagnoseCmd.Flags().StringVarP(&o.ignores, "ignores", "i", "", "ignore dependencies (separated by a space)")
 	diagnoseCmd.Flags().IntVarP(&o.year, "year", "y", MAX_YEAR_TO_BE_BLANK, "max years of inactivity")
+
+	if err := diagnoseCmd.MarkFlagRequired("package"); err != nil {
+		fmt.Println(err.Error())
+	}
+	if err := diagnoseCmd.MarkFlagRequired("file"); err != nil {
+		fmt.Println(err.Error())
+	}
 }
 
 func Report(diagnoses map[string]Diagnosis) error {

@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"errors"
 	"os"
 	"testing"
 
+	"github.com/kyoshidajp/dep-doctor/cmd/ruby"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -65,9 +67,147 @@ func TestDiagnose(t *testing.T) {
 		require.NoError(t, err)
 		defer f.Close()
 
-		doctor := NewBundlerDoctor()
+		doctor := ruby.NewBundlerDoctor()
 		ignores := []string{"i18n"}
 		diagnoses := Diagnose(doctor, f, 2, ignores)
 		assert.Equal(t, expect, diagnoses)
 	})
+}
+
+func TestDiagnosis_ErrorMessage(t *testing.T) {
+	tests := []struct {
+		name      string
+		diagnosis Diagnosis
+	}{
+		{
+			name: "has Error",
+			diagnosis: Diagnosis{
+				Error: errors.New("unknown error"),
+			},
+		},
+		{
+			name: "has no Error",
+			diagnosis: Diagnosis{
+				Error: nil,
+			},
+		},
+	}
+	expects := []struct {
+		name    string
+		message string
+	}{
+		{
+			name:    "has Error",
+			message: "unknown error",
+		},
+		{
+			name:    "has no Error",
+			message: "",
+		},
+	}
+
+	for i, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual := tt.diagnosis.ErrorMessage()
+			expect := expects[i].message
+			assert.Equal(t, expect, actual)
+		})
+	}
+}
+
+func TestOptions_Ignores(t *testing.T) {
+	tests := []struct {
+		name    string
+		options Options
+	}{
+		{
+			name: "ignores",
+			options: Options{
+				ignores: "package1 package2 package3",
+			},
+		},
+	}
+	expects := []struct {
+		name    string
+		ignores []string
+	}{
+		{
+			name:    "ignores",
+			ignores: []string{"package1", "package2", "package3"},
+		},
+	}
+
+	for i, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual := tt.options.Ignores()
+			expect := expects[i].ignores
+			assert.Equal(t, expect, actual)
+		})
+	}
+}
+
+func TestDoctors_PackageManagers(t *testing.T) {
+	tests := []struct {
+		name    string
+		doctors Doctors
+	}{
+		{
+			name: "doctors",
+			doctors: Doctors{
+				"package1": nil,
+				"package2": nil,
+				"package3": nil,
+			},
+		},
+	}
+	expects := []struct {
+		name     string
+		packages []string
+	}{
+		{
+			name:     "doctors",
+			packages: []string{"package1", "package2", "package3"},
+		},
+	}
+
+	for i, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual := tt.doctors.PackageManagers()
+			expect := expects[i].packages
+			assert.Equal(t, expect, actual)
+		})
+	}
+}
+
+func TestDoctors_UnknownErrorMessage(t *testing.T) {
+	tests := []struct {
+		name    string
+		doctors Doctors
+	}{
+		{
+			name: "doctors",
+			doctors: Doctors{
+				"p1": nil,
+				"p2": nil,
+				"p3": nil,
+			},
+		},
+	}
+	expects := []struct {
+		name    string
+		message string
+	}{
+		{
+			name:    "doctors",
+			message: "Unknown package manager: xxx. You can choose from [p1, p2, p3]",
+		},
+	}
+
+	for i, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual := tt.doctors.UnknownErrorMessage("xxx")
+			expect := expects[i].message
+			assert.Equal(t, expect, actual)
+		})
+	}
 }

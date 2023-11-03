@@ -1,4 +1,4 @@
-package cmd
+package golang
 
 import (
 	"net/http"
