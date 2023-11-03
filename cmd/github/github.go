@@ -3,7 +3,6 @@ package github
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"time"
@@ -25,6 +24,7 @@ type GitHubRepository struct {
 	URL             string
 	Archived        bool
 	LastCommittedAt time.Time
+	Error           error
 }
 
 func (r GitHubRepository) IsActive(year int) bool {
@@ -102,11 +102,6 @@ func ParseGitHubURL(url string) (GitHubRepository, error) {
 
 func FetchFromGitHub(params []FetchRepositoryParam) []GitHubRepository {
 	token := os.Getenv(TOKEN_NAME)
-	if len(token) == 0 {
-		m := fmt.Sprintf("Environment variable `%s` is not found.", TOKEN_NAME)
-		log.Fatal(m)
-	}
-
 	src := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
 	)
@@ -152,8 +147,15 @@ func FetchFromGitHub(params []FetchRepositoryParam) []GitHubRepository {
 	}
 
 	repos := []GitHubRepository{}
+
 	err := client.Query(context.Background(), &query, variables)
 	if err != nil {
+		for _, param := range params {
+			repos = append(repos, GitHubRepository{
+				Name:  param.PackageName,
+				Error: err,
+			})
+		}
 		return repos
 	}
 

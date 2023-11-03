@@ -9,11 +9,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/MakeNowJust/heredoc"
 	"github.com/aquasecurity/go-dep-parser/pkg/io"
 	parser_io "github.com/aquasecurity/go-dep-parser/pkg/io"
 	"github.com/aquasecurity/go-dep-parser/pkg/types"
-	"github.com/fatih/color"
 	dart "github.com/kyoshidajp/dep-doctor/cmd/dart/pub"
 	erlang_elixir "github.com/kyoshidajp/dep-doctor/cmd/erlang_elixir/hex"
 	"github.com/kyoshidajp/dep-doctor/cmd/github"
@@ -66,6 +64,15 @@ func (p RepositoryParams) SearchableParams() []github.FetchRepositoryParam {
 		}
 	}
 	return params
+}
+
+func Prepare() error {
+	token := os.Getenv(github.TOKEN_NAME)
+	if len(token) == 0 {
+		m := fmt.Sprintf("The Environment variable `%s` is not set. It must be set before execution. For example, please refer to https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens", github.TOKEN_NAME)
+		return errors.New(m)
+	}
+	return nil
 }
 
 func FetchRepositoryParams(libs []types.Library, d Doctor) RepositoryParams {
@@ -157,6 +164,7 @@ func Diagnose(d Doctor, r io.ReadSeekCloserAt, year int, ignores []string) map[s
 					Ignored:   isIgnore,
 					Diagnosed: true,
 					IsActive:  r.IsActive(year),
+					Error:     r.Error,
 				}
 				diagnoses[r.Name] = diagnosis
 			}
@@ -178,6 +186,11 @@ func Diagnose(d Doctor, r io.ReadSeekCloserAt, year int, ignores []string) map[s
 		diagnoses[fetchRepositoryParam.PackageName] = diagnosis
 	}
 	return diagnoses
+}
+
+func Report(diagnoses map[string]Diagnosis, strict_mode bool) error {
+	reporter := NewStdoutReporter(diagnoses, strict_mode)
+	return reporter.Report()
 }
 
 type Options struct {
@@ -231,6 +244,10 @@ var diagnoseCmd = &cobra.Command{
 	Use:   "diagnose",
 	Short: "Diagnose dependencies",
 	Run: func(cmd *cobra.Command, args []string) {
+		if err := Prepare(); err != nil {
+			log.Fatal(err)
+		}
+
 		doctor, ok := doctors[o.packageManager]
 		if !ok {
 			m := doctors.UnknownErrorMessage(o.packageManager)
@@ -268,67 +285,4 @@ func init() {
 	if err := diagnoseCmd.MarkFlagRequired("file"); err != nil {
 		fmt.Println(err.Error())
 	}
-}
-
-func Report(diagnoses map[string]Diagnosis, strict_mode bool) error {
-	errMessages, warnMessages, ignoredMessages := []string{}, []string{}, []string{}
-	errCount, warnCount, infoCount := 0, 0, 0
-	unDiagnosedCount, ignoredCount := 0, 0
-
-	lib_names := make([]string, 0, len(diagnoses))
-	for key := range diagnoses {
-		lib_names = append(lib_names, key)
-	}
-	sort.Strings(lib_names)
-
-	for _, lib_name := range lib_names {
-		diagnosis := diagnoses[lib_name]
-		if diagnosis.Ignored {
-			ignoredMessages = append(ignoredMessages, fmt.Sprintf("[info] %s (ignored):", diagnosis.Name))
-			ignoredCount += 1
-			infoCount += 1
-			continue
-		}
-
-		if !diagnosis.Diagnosed {
-			warnMessages = append(warnMessages, fmt.Sprintf("[warn] %s (unknown): %s", diagnosis.Name, diagnosis.ErrorMessage()))
-			unDiagnosedCount += 1
-			warnCount += 1
-			continue
-		}
-		if diagnosis.Archived {
-			errMessages = append(errMessages, fmt.Sprintf("[error] %s (archived): %s", diagnosis.Name, diagnosis.URL))
-			errCount += 1
-		}
-		if !diagnosis.IsActive {
-			warnMessages = append(warnMessages, fmt.Sprintf("[warn] %s (not-maintained): %s", diagnosis.Name, diagnosis.URL))
-			warnCount += 1
-		}
-	}
-
-	fmt.Printf("\n")
-	if len(ignoredMessages) > 0 {
-		fmt.Println(strings.Join(ignoredMessages, "\n"))
-	}
-	if len(warnMessages) > 0 {
-		color.Yellow(strings.Join(warnMessages, "\n"))
-	}
-	if len(errMessages) > 0 {
-		color.Red(strings.Join(errMessages, "\n"))
-	}
-
-	color.Green(heredoc.Docf(`
-		Diagnosis completed! %d libraries.
-		%d error, %d warn (%d unknown), %d info (%d ignored)`,
-		len(diagnoses),
-		errCount,
-		warnCount, unDiagnosedCount,
-		infoCount, ignoredCount),
-	)
-
-	if len(errMessages) > 0 || strict_mode && warnCount > 0 {
-		return errors.New("has error")
-	}
-
-	return nil
 }
