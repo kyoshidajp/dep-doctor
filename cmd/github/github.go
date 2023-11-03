@@ -3,7 +3,6 @@ package github
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"time"
@@ -103,11 +102,6 @@ func ParseGitHubURL(url string) (GitHubRepository, error) {
 
 func FetchFromGitHub(params []FetchRepositoryParam) []GitHubRepository {
 	token := os.Getenv(TOKEN_NAME)
-	if len(token) == 0 {
-		m := fmt.Sprintf("Environment variable `%s` is not found.", TOKEN_NAME)
-		log.Fatal(m)
-	}
-
 	src := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
 	)

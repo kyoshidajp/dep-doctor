@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -63,6 +64,15 @@ func (p RepositoryParams) SearchableParams() []github.FetchRepositoryParam {
 		}
 	}
 	return params
+}
+
+func Prepare() error {
+	token := os.Getenv(github.TOKEN_NAME)
+	if len(token) == 0 {
+		m := fmt.Sprintf("The Environment variable `%s` is not set. It must be set before execution. For example, please refer to https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens", github.TOKEN_NAME)
+		return errors.New(m)
+	}
+	return nil
 }
 
 func FetchRepositoryParams(libs []types.Library, d Doctor) RepositoryParams {
@@ -234,6 +244,10 @@ var diagnoseCmd = &cobra.Command{
 	Use:   "diagnose",
 	Short: "Diagnose dependencies",
 	Run: func(cmd *cobra.Command, args []string) {
+		if err := Prepare(); err != nil {
+			log.Fatal(err)
+		}
+
 		doctor, ok := doctors[o.packageManager]
 		if !ok {
 			m := doctors.UnknownErrorMessage(o.packageManager)
