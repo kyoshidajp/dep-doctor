@@ -180,7 +180,7 @@ func Diagnose(d Doctor, r io.ReadSeekCloserAt, year int, ignores []string) map[s
 
 type Options struct {
 	packageManager string
-	lockFilePath   string
+	filePath       string
 	ignores        string
 	year           int
 }
@@ -231,13 +231,13 @@ var diagnoseCmd = &cobra.Command{
 			log.Fatal(m)
 		}
 
-		lockFilePath := o.lockFilePath
-		f, err := os.Open(lockFilePath)
+		filePath := o.filePath
+		f, err := os.Open(filePath)
 		defer func() {
 			_ = f.Close()
 		}()
 		if err != nil {
-			m := fmt.Sprintf("Can't open: %s.", o.lockFilePath)
+			m := fmt.Sprintf("Can't open: %s.", o.filePath)
 			log.Fatal(m)
 		}
 
@@ -251,7 +251,7 @@ var diagnoseCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(diagnoseCmd)
 	diagnoseCmd.Flags().StringVarP(&o.packageManager, "package", "p", "bundler", "package manager")
-	diagnoseCmd.Flags().StringVarP(&o.lockFilePath, "lock_file", "f", "Gemfile.lock", "lock file path")
+	diagnoseCmd.Flags().StringVarP(&o.filePath, "file", "f", "Gemfile.lock", "dependencies file path")
 	diagnoseCmd.Flags().StringVarP(&o.ignores, "ignores", "i", "", "ignore dependencies (separated by a space)")
 	diagnoseCmd.Flags().IntVarP(&o.year, "year", "y", MAX_YEAR_TO_BE_BLANK, "max years of inactivity")
 }
