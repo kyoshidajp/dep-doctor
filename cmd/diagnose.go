@@ -15,6 +15,7 @@ import (
 	"github.com/aquasecurity/go-dep-parser/pkg/types"
 	"github.com/fatih/color"
 	dart "github.com/kyoshidajp/dep-doctor/cmd/dart/pub"
+	erlang_elixir "github.com/kyoshidajp/dep-doctor/cmd/erlang_elixir/hex"
 	"github.com/kyoshidajp/dep-doctor/cmd/github"
 	"github.com/kyoshidajp/dep-doctor/cmd/golang"
 	"github.com/kyoshidajp/dep-doctor/cmd/nodejs"
@@ -214,15 +215,16 @@ func (d Doctors) UnknownErrorMessage(packageManager string) string {
 
 var doctors = Doctors{
 	"bundler":   ruby.NewBundlerDoctor(),
-	"yarn":      nodejs.NewYarnDoctor(),
+	"cargo":     rust.NewCargoDoctor(),
+	"cocoapods": swift.NewCococaPodsDoctor(),
+	"composer":  php.NewComposerDoctor(),
+	"golang":    golang.NewGolangDoctor(),
+	"npm":       nodejs.NewNPMDoctor(),
+	"mix":       erlang_elixir.NewMixDoctor(),
 	"pip":       python.NewPipDoctor(),
 	"pipenv":    python.NewPipenvDoctor(),
 	"pub":       dart.NewPubDoctor(),
-	"npm":       nodejs.NewNPMDoctor(),
-	"composer":  php.NewComposerDoctor(),
-	"golang":    golang.NewGolangDoctor(),
-	"cargo":     rust.NewCargoDoctor(),
-	"cocoapods": swift.NewCococaPodsDoctor(),
+	"yarn":      nodejs.NewYarnDoctor(),
 }
 
 var diagnoseCmd = &cobra.Command{
