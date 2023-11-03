@@ -250,10 +250,13 @@ var diagnoseCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(diagnoseCmd)
-	diagnoseCmd.Flags().StringVarP(&o.packageManager, "package", "p", "bundler", "package manager")
-	diagnoseCmd.Flags().StringVarP(&o.filePath, "file", "f", "Gemfile.lock", "dependencies file path")
+	diagnoseCmd.Flags().StringVarP(&o.packageManager, "package", "p", "", "package manager")
+	diagnoseCmd.Flags().StringVarP(&o.filePath, "file", "f", "", "dependencies file path")
 	diagnoseCmd.Flags().StringVarP(&o.ignores, "ignores", "i", "", "ignore dependencies (separated by a space)")
 	diagnoseCmd.Flags().IntVarP(&o.year, "year", "y", MAX_YEAR_TO_BE_BLANK, "max years of inactivity")
+
+	diagnoseCmd.MarkFlagRequired("package")
+	diagnoseCmd.MarkFlagRequired("file")
 }
 
 func Report(diagnoses map[string]Diagnosis) error {
