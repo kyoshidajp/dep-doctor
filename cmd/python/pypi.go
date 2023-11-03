@@ -14,8 +14,10 @@ const PYPI_REGISTRY_API = "https://pypi.org/pypi/%s/json"
 type PypiRegistryResponse struct {
 	Info struct {
 		ProjectUrls struct {
-			SourceCode string `json:"Source Code"`
-			Source     string `json:"Source"`
+			SourceCode    string `json:"Source Code"`
+			Source        string `json:"Source"`
+			Code          string `json:"Code"`
+			GitHubProject string `json:"GitHub Project"`
 		} `json:"project_urls"`
 	} `json:"info"`
 }
@@ -52,6 +54,14 @@ func (p *Pypi) fetchURLFromRegistry(client http.Client) (string, error) {
 
 	if PypiRegistryResponse.Info.ProjectUrls.SourceCode != "" {
 		return PypiRegistryResponse.Info.ProjectUrls.SourceCode, nil
+	}
+
+	if PypiRegistryResponse.Info.ProjectUrls.Code != "" {
+		return PypiRegistryResponse.Info.ProjectUrls.Code, nil
+	}
+
+	if PypiRegistryResponse.Info.ProjectUrls.GitHubProject != "" {
+		return PypiRegistryResponse.Info.ProjectUrls.GitHubProject, nil
 	}
 
 	return PypiRegistryResponse.Info.ProjectUrls.Source, nil
