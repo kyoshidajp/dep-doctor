@@ -87,11 +87,12 @@ func FetchRepositoryParams(libs []types.Library, d Doctor, cache map[string]stri
 			defer wg.Done()
 			defer func() { <-sem }()
 
-			fmt.Printf("%s\n", lib.Name)
-
 			var url string
 			url, ok := cache[lib.Name]
-			if !ok {
+			if ok {
+				fmt.Printf("%s (from source URL cache)\n", lib.Name)
+			} else {
+				fmt.Printf("%s\n", lib.Name)
 				var err error
 				url, err = d.SourceCodeURL(lib)
 				if err != nil {
