@@ -49,39 +49,44 @@ type GitHubURL struct {
 	URL string
 }
 
-func (githuburl GitHubURL) Parse() (string, string, error) {
-	if githuburl.URL == "" {
+func (g GitHubURL) Parse() (string, string, error) {
+	if g.URL == "" {
 		return "", "", fmt.Errorf("source code URL is blank")
 	}
 
-	u, err := giturls.Parse(githuburl.URL)
+	u, err := giturls.Parse(g.URL)
 	if err != nil {
-		return "", "", fmt.Errorf("unknown source code URL: %s", githuburl.URL)
+		return "", "", fmt.Errorf("unknown source code URL: %s", g.URL)
 	}
 
-	var owner, repo string
+	var owner, rawRepo string
 	paths := strings.Split(u.Path, "/")
-	if u.Scheme == "ssh" {
+	switch {
+	case u.Scheme == "git" || u.Scheme == "git+ssh":
+		owner = paths[1]
+		rawRepo = paths[2]
+	case u.Scheme == "ssh":
 		owner = paths[0]
-		repo = strings.Replace(paths[1], ".git", "", 1)
-	} else if u.Scheme == "https" || u.Scheme == "http" {
+		rawRepo = paths[1]
+	case u.Scheme == "https" || u.Scheme == "http":
 		if len(paths) < 3 {
-			return "", "", fmt.Errorf("unknown source code URL: %s", githuburl.URL)
+			return "", "", fmt.Errorf("unknown source code URL: %s", g.URL)
 		}
 		owner = paths[1]
-		repo = strings.Replace(paths[2], ".git", "", 1)
-	} else if u.Scheme == "file" {
+		rawRepo = paths[2]
+	case u.Scheme == "file":
 		if paths[0] == "github.com" {
 			owner = paths[1]
-			repo = strings.Replace(paths[2], ".git", "", 1)
+			rawRepo = paths[2]
 		} else {
 			owner = paths[3]
-			repo = strings.Replace(paths[4], ".git", "", 1)
+			rawRepo = paths[4]
 		}
-	} else {
-		return "", "", fmt.Errorf("unknown source code URL: %s", githuburl.URL)
+	default:
+		return "", "", fmt.Errorf("unknown source code URL: %s", g.URL)
 	}
 
+	repo := strings.Replace(rawRepo, ".git", "", 1)
 	return owner, repo, nil
 }
 
