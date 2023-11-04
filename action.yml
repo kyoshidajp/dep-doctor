@@ -24,7 +24,7 @@ runs:
           api_request_args=("${api_request_args[@]}" -H "authorization: token $github_token")
         fi
         if [ "${VERSION}" = "latest" ]; then
-            DOWNLOAD_URL=$(curl "${api_request_args[@]}" https://api.github.com/repos/kyoshidajp/dep-doctor/releases | jq -r '[.[]|select(.tag_name > "v0.2")][0].assets[].browser_download_url|select(match("Linux_x86_64."))')
+          DOWNLOAD_URL=$(curl "${api_request_args[@]}" https://api.github.com/repos/kyoshidajp/dep-doctor/releases | jq -r '[.[]|select(.tag_name > "v0.2")][0].assets[].browser_download_url|select(match("Linux_x86_64."))')
         else
           DOWNLOAD_URL=https://github.com/kyoshidajp/dep-doctor/releases/download/${VERSION}/dep-doctor_Linux_x86_64.tar.gz
         fi

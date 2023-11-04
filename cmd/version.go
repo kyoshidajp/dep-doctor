@@ -8,8 +8,8 @@ import (
 )
 
 var (
-	Revision = "2"
-	Version  = "0"
+	Revision = "0"
+	Version  = "1"
 )
 
 func getVersion() string {
