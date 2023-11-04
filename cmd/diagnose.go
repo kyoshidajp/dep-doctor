@@ -75,7 +75,7 @@ func Prepare() error {
 	return nil
 }
 
-func FetchRepositoryParams(libs []types.Library, d Doctor, cache map[string]string) RepositoryParams {
+func FetchRepositoryParams(libs []types.Library, d Doctor, cache map[string]string, disableCache bool) RepositoryParams {
 	var params []github.FetchRepositoryParam
 	var wg sync.WaitGroup
 	sem := make(chan struct{}, FETCH_REPOS_PER_ONCE)
@@ -89,7 +89,7 @@ func FetchRepositoryParams(libs []types.Library, d Doctor, cache map[string]stri
 
 			var url string
 			url, ok := cache[lib.Name]
-			if ok {
+			if !disableCache && ok {
 				fmt.Printf("%s (from source URL cache)\n", lib.Name)
 			} else {
 				fmt.Printf("%s\n", lib.Name)
@@ -135,11 +135,11 @@ func FetchRepositoryParams(libs []types.Library, d Doctor, cache map[string]stri
 	return params
 }
 
-func Diagnose(d Doctor, r io.ReadSeekCloserAt, year int, ignores []string, cache map[string]string) map[string]Diagnosis {
+func Diagnose(d Doctor, r io.ReadSeekCloserAt, year int, ignores []string, cache map[string]string, disableCache bool) map[string]Diagnosis {
 	diagnoses := make(map[string]Diagnosis)
 	slicedParams := [][]github.FetchRepositoryParam{}
 	libs := d.Libraries(r)
-	fetchRepositoryParams := FetchRepositoryParams(libs, d, cache)
+	fetchRepositoryParams := FetchRepositoryParams(libs, d, cache, disableCache)
 	searchableRepositoryParams := fetchRepositoryParams.SearchableParams()
 	sliceSize := len(searchableRepositoryParams)
 
@@ -205,6 +205,7 @@ type Options struct {
 	ignores        string
 	year           int
 	strict         bool
+	disableCache   bool
 }
 
 func (o *Options) Ignores() []string {
@@ -272,7 +273,7 @@ var diagnoseCmd = &cobra.Command{
 
 		cacheStore := BuildCacheStore()
 		cache := cacheStore.URLbyPackageManager(o.packageManager)
-		diagnoses := Diagnose(doctor, f, o.year, o.Ignores(), cache)
+		diagnoses := Diagnose(doctor, f, o.year, o.Ignores(), cache, o.disableCache)
 		if err := SaveCache(diagnoses, cacheStore, o.packageManager); err != nil {
 			log.Fatal(err)
 		}
@@ -290,6 +291,7 @@ func init() {
 	diagnoseCmd.Flags().StringVarP(&o.ignores, "ignores", "i", "", "ignore dependencies (separated by a space)")
 	diagnoseCmd.Flags().IntVarP(&o.year, "year", "y", MAX_YEAR_TO_BE_BLANK, "max years of inactivity")
 	diagnoseCmd.PersistentFlags().BoolVarP(&o.strict, "strict", "", false, "exit with non-zero if warnings exist")
+	diagnoseCmd.PersistentFlags().BoolVarP(&o.disableCache, "disable-cache", "", false, "without using cache")
 
 	if err := diagnoseCmd.MarkFlagRequired("package"); err != nil {
 		fmt.Println(err.Error())

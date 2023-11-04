@@ -51,6 +51,7 @@ Usage:
   dep-doctor diagnose [flags]
 
 Flags:
+      --disable-cache    without using cache
   -f, --file string      dependencies file path
   -h, --help             help for diagnose
   -i, --ignores string   ignore dependencies (separated by a space)
@@ -82,6 +83,14 @@ Diagnosis completed! 6 dependencies.
 | *error* | Source code repository is already archived. |
 | *warn* | Source code repository is not active or unknown. |
 | *info* | Other reasons. (specified to be ignored) | |
+
+## Options
+
+### `--disable-cache`
+
+When a status result is retrieved from the source code repository, the URL is kept in a file as a cache (`.dep-doctor.yml`). Normally, the repository URL is not changed frequently. To speed up the running, this cache is referenced on the second and subsequent runs.
+
+With the `--disable-cache` option, this cache is not referenced. It always retrieves the latest source code URL from the package registry.
 
 ## How it works
 
