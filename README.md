@@ -63,7 +63,7 @@ Flags:
 For example:
 
 ```console
-$ dep-doctor diagnose -p bundler -f /path/to/Gemfile.lock
+$ dep-doctor diagnose --package bundler --file /path/to/Gemfile.lock
 concurrent-ruby
 dotenv
 faker
@@ -84,7 +84,32 @@ Diagnosis completed! 6 dependencies.
 | *warn* | Source code repository is not active or unknown. |
 | *info* | Other reasons. (specified to be ignored) | |
 
-## Options
+## Useful options
+
+### `--year`
+
+The maximum number of blank years to be considered maintained. A source code repository is considered maintained if it has been committed within this number of years.
+
+The default is `5` years, but if longer is desired, for example
+
+```console
+$ dep-doctor diagnose --package bundler --file /path/to/Gemfile.lock --year 7
+```
+
+In the above case, if there are commits within the last 7 years, it is considered to be maintained.
+
+### `--ignores`
+
+You can specify libraries not to notify you of errors or warnings. This may be useful if you plan to address the issue in the near future but wish to ignore it at this time.
+
+Please specify this option with the understanding that there is a risk.
+
+If there is more than one, you can specify each one separated by a space as follows.
+
+```console
+$ dep-doctor diagnose --package bundler --file /path/to/Gemfile.lock \
+  --ignores "lib1 lib2 lib3"
+```
 
 ### `--disable-cache`
 
