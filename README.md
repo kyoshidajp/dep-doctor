@@ -117,6 +117,25 @@ When a status result is retrieved from the source code repository, the URL is ke
 
 With the `--disable-cache` option, this cache is not referenced. It always retrieves the latest source code URL from the package registry.
 
+## GitHub Actions
+
+Installs an dep-doctor binary for Linux(x86_64) into /usr/local/bin. This action runs install only.
+
+```yml
+jobs:
+  diagnose:
+    name: dep-doctor
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: kyoshidajp/dep-doctor@v1
+        with:
+          version: v1.0.0 # or latest
+      - run: dep-doctor diagnose --package golang --file go.mod
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
 ## How it works
 
 ![how_works](doc/images/how_works.png "dep-doctor how works")
