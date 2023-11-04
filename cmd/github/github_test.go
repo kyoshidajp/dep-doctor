@@ -53,39 +53,55 @@ func TestParseGitHubURL(t *testing.T) {
 		url  string
 	}{
 		{
-			name: "github.com repository",
+			name: "starts github.com",
 			url:  "github.com/bvaughn/highlight-words-core.git",
 		},
 		{
-			name: "http scheme repository",
+			name: "starts https://",
 			url:  "https://github.com/rails/thor/tree/v1.3.0",
 		},
 		{
-			name: "git scheme repository",
+			name: "starts git@",
 			url:  "git@github.com:rails/thor.git",
 		},
 		{
-			name: "git+https scheme repository",
+			name: "starts git+https://",
 			url:  "git+https://github.com/then/promise.git",
+		},
+		{
+			name: "starts git://",
+			url:  "git://github.com/es-shims/typedarray.git",
+		},
+		{
+			name: "starts git+ssh://",
+			url:  "git+ssh://git@github.com/DABH/colors.js.git",
 		},
 	}
 
 	expects := map[string]GitHubRepository{
-		"github.com repository": {
+		"starts github.com": {
 			Owner: "bvaughn",
 			Repo:  "highlight-words-core",
 		},
-		"http scheme repository": {
+		"starts https://": {
 			Owner: "rails",
 			Repo:  "thor",
 		},
-		"git scheme repository": {
+		"starts git@": {
 			Owner: "rails",
 			Repo:  "thor",
 		},
-		"git+https scheme repository": {
+		"starts git+https://": {
 			Owner: "then",
 			Repo:  "promise",
+		},
+		"starts git://": {
+			Owner: "es-shims",
+			Repo:  "typedarray",
+		},
+		"starts git+ssh://": {
+			Owner: "DABH",
+			Repo:  "colors.js",
 		},
 	}
 
