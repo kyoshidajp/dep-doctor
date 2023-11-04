@@ -26,7 +26,7 @@ func (r *CacheStore) URLbyPackageManager(packageManager string) map[string]strin
 	return repos
 }
 
-func (r *CacheStore) RebuildCacheRoot(diagnoses map[string]Diagnosis, packageManager string) CacheStore {
+func (r *CacheStore) RebuildCacheStore(diagnoses map[string]Diagnosis, packageManager string) CacheStore {
 	var packageManagers []CachePackageManager
 	// get from Diagnosis
 	repos := map[string]CacheRepository{}
@@ -104,8 +104,8 @@ func BuildCacheStore() CacheStore {
 }
 
 func SaveCache(diagnoses map[string]Diagnosis, cacheStore CacheStore, packageManager string) error {
-	root := cacheStore.RebuildCacheRoot(diagnoses, packageManager)
-	yamlData, err := yaml.Marshal(&root)
+	store := cacheStore.RebuildCacheStore(diagnoses, packageManager)
+	yamlData, err := yaml.Marshal(&store)
 	if err != nil {
 		return err
 	}
