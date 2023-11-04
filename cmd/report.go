@@ -31,14 +31,14 @@ func (r *StdoutReporter) Report() error {
 	errCount, warnCount, infoCount := 0, 0, 0
 	unDiagnosedCount, ignoredCount := 0, 0
 
-	lib_names := make([]string, 0, len(r.diagnoses))
+	libNames := make([]string, 0, len(r.diagnoses))
 	for key := range r.diagnoses {
-		lib_names = append(lib_names, key)
+		libNames = append(libNames, key)
 	}
-	sort.Strings(lib_names)
+	sort.Strings(libNames)
 
-	for _, lib_name := range lib_names {
-		diagnosis := r.diagnoses[lib_name]
+	for _, libName := range libNames {
+		diagnosis := r.diagnoses[libName]
 		if diagnosis.Ignored {
 			ignoredMessages = append(ignoredMessages, fmt.Sprintf("[info] %s (ignored):", diagnosis.Name))
 			ignoredCount += 1
