@@ -278,7 +278,7 @@ func newDiagnoseCmd(o *DiagnoseOption) *cobra.Command {
 			}
 
 			if err := Report(diagnoses, o.strict); err != nil {
-				return fmt.Errorf("has error")
+				return errors.New("")
 			}
 
 			return nil
