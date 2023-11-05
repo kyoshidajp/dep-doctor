@@ -2,26 +2,46 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/spf13/cobra"
 )
 
-var rootCmd = &cobra.Command{
-	Use: "dep-doctor",
+func newRootCmd(out, errOut io.Writer) (*cobra.Command, error) {
+	o := &DiagnoseOption{}
+	o.Out = out
+	o.ErrOut = errOut
+
+	cmd := &cobra.Command{
+		Use: "dep-doctor",
+	}
+	cmd.AddCommand(
+		newDiagnoseCmd(o),
+	)
+	cmd.AddCommand(
+		newVersionCmd(),
+	)
+	cmd.SetOut(out)
+	cmd.SetErr(errOut)
+
+	return cmd, nil
 }
 
-func exitError(msg interface{}) {
-	fmt.Fprintln(os.Stderr, msg)
-	os.Exit(1)
-}
+func Execute() int {
+	o := os.Stdout
+	e := os.Stderr
 
-func Execute() {
-	rootCmd.Run = func(cmd *cobra.Command, args []string) {
-		_ = rootCmd.Help()
+	rootCmd, err := newRootCmd(o, e)
+	if err != nil {
+		fmt.Fprintln(e, err)
+		return 1
 	}
 
-	if err := rootCmd.Execute(); err != nil {
-		exitError(err)
+	if err = rootCmd.Execute(); err != nil {
+		fmt.Fprintln(e, err)
+		return 1
 	}
+
+	return 0
 }

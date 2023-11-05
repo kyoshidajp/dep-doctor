@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"bytes"
 	"errors"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/kyoshidajp/dep-doctor/cmd/ruby"
@@ -43,14 +45,6 @@ func TestDiagnose(t *testing.T) {
 			Ignored:   false,
 			Diagnosed: true,
 			IsActive:  true,
-		},
-		"paperclip": {
-			Name:      "paperclip",
-			URL:       "https://github.com/thoughtbot/paperclip",
-			Archived:  true,
-			Ignored:   false,
-			Diagnosed: true,
-			IsActive:  false,
 		},
 		"dotenv": {
 			Name:      "dotenv",
@@ -118,12 +112,12 @@ func TestDiagnosis_ErrorMessage(t *testing.T) {
 
 func TestOptions_Ignores(t *testing.T) {
 	tests := []struct {
-		name    string
-		options Options
+		name   string
+		option DiagnoseOption
 	}{
 		{
 			name: "ignores",
-			options: Options{
+			option: DiagnoseOption{
 				ignores: "package1 package2 package3",
 			},
 		},
@@ -140,7 +134,7 @@ func TestOptions_Ignores(t *testing.T) {
 
 	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			actual := tt.options.Ignores()
+			actual := tt.option.Ignores()
 			expect := expects[i].ignores
 			assert.Equal(t, expect, actual)
 		})
@@ -209,6 +203,154 @@ func TestDoctors_UnknownErrorMessage(t *testing.T) {
 			actual := tt.doctors.UnknownErrorMessage("xxx")
 			expect := expects[i].message
 			assert.Equal(t, expect, actual)
+		})
+	}
+}
+
+func TestDiagnose_newDiagnoseCmd(t *testing.T) {
+	tests := []struct {
+		name          string
+		command       string
+		wantOutWriter string
+		wantErrWriter string
+		wantErr       bool
+	}{
+		{
+			name:          "bundler with no problems",
+			command:       "--package bundler --file ruby/bundler/testdata/Gemfile.lock",
+			wantOutWriter: "",
+			wantErrWriter: "",
+			wantErr:       false,
+		},
+		{
+			name:          "yarn",
+			command:       "--package yarn --file nodejs/yarn/testdata/yarn.lock",
+			wantOutWriter: "",
+			wantErrWriter: "",
+			wantErr:       false,
+		},
+		{
+			name:          "npm",
+			command:       "--package npm --file nodejs/npm/testdata/package-lock.json",
+			wantOutWriter: "",
+			wantErrWriter: "",
+			wantErr:       false,
+		},
+		{
+			name:          "pip",
+			command:       "--package pip --file python/pip/testdata/requirements.txt",
+			wantOutWriter: "",
+			wantErrWriter: "",
+			wantErr:       false,
+		},
+		{
+			name:          "pipenv",
+			command:       "--package pipenv --file python/pipenv/testdata/Pipfile.lock",
+			wantOutWriter: "",
+			wantErrWriter: "has error",
+			wantErr:       true,
+		},
+		{
+			name:          "golang",
+			command:       "--package golang --file golang/mod/testdata/go.mod",
+			wantOutWriter: "",
+			wantErrWriter: "has error",
+			wantErr:       true,
+		},
+		{
+			name:          "cargo",
+			command:       "--package cargo --file rust/cargo/testdata/cargo.lock",
+			wantOutWriter: "",
+			wantErrWriter: "has error",
+			wantErr:       true,
+		},
+		{
+			name:          "cocoapods",
+			command:       "--package cocoapods --file swift/cocoapods/testdata/Podfile.lock",
+			wantOutWriter: "",
+			wantErrWriter: "has error",
+			wantErr:       true,
+		},
+		{
+			name:          "pub",
+			command:       "--package pub --file dart/pub/testdata/podspec.lock",
+			wantOutWriter: "",
+			wantErrWriter: "has error",
+			wantErr:       true,
+		},
+		{
+			name:          "mix",
+			command:       "--package mix --file erlang_elixir/hex/testdata/mix.lock",
+			wantOutWriter: "",
+			wantErrWriter: "",
+			wantErr:       false,
+		},
+		{
+			name:          "has error",
+			command:       "--package bundler --file ruby/bundler/testdata/Gemfile_error.lock",
+			wantOutWriter: "",
+			wantErrWriter: "has error",
+			wantErr:       true,
+		},
+		{
+			name:          "unknown package manager",
+			command:       "--package unknown --file ruby/bundler/testdata/Gemfile.lock",
+			wantOutWriter: "",
+			wantErrWriter: "Unknown package manager: unknown. You can choose from [bundler, cargo, cocoapods, composer, golang, mix, npm, pip, pipenv, pub, yarn]",
+			wantErr:       true,
+		},
+		{
+			name:          "can't open file",
+			command:       "--package bundler --file cant_open_file.txt",
+			wantOutWriter: "",
+			wantErrWriter: "Can't open: cant_open_file.txt",
+			wantErr:       true,
+		},
+		{
+			name:          "no package option",
+			command:       "--file ruby/bundler/testdata/Gemfile.lock",
+			wantOutWriter: "",
+			wantErrWriter: "required flag(s) \"package\" not set",
+			wantErr:       true,
+		},
+		{
+			name:          "no file option",
+			command:       "--package bundler",
+			wantOutWriter: "",
+			wantErrWriter: "required flag(s) \"file\" not set",
+			wantErr:       true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			outWriter := &bytes.Buffer{}
+			errWriter := &bytes.Buffer{}
+
+			o := &DiagnoseOption{
+				Out:    outWriter,
+				ErrOut: errWriter,
+			}
+
+			cmd := newDiagnoseCmd(o)
+			if tt.command != "" {
+				cmd.SetArgs(strings.Split(tt.command, " "))
+			}
+
+			err := cmd.Execute()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("get() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if err != nil {
+				if err.Error() != tt.wantErrWriter {
+					t.Errorf("get() = %v, want %v", err.Error(), tt.wantErrWriter)
+				}
+			} else {
+				if gotOutWriter := outWriter.String(); gotOutWriter != tt.wantOutWriter {
+					t.Errorf("get() = %v, want %v", gotOutWriter, tt.wantOutWriter)
+				}
+			}
 		})
 	}
 }

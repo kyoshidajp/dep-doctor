@@ -1,7 +1,11 @@
 package main
 
-import "github.com/kyoshidajp/dep-doctor/cmd"
+import (
+	"os"
+
+	"github.com/kyoshidajp/dep-doctor/cmd"
+)
 
 func main() {
-	cmd.Execute()
+	os.Exit(cmd.Execute())
 }

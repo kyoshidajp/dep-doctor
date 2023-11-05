@@ -19,14 +19,13 @@ OS: %s
 Arch: %s`, Version, Revision, runtime.GOOS, runtime.GOARCH)
 }
 
-var versionCmd = &cobra.Command{
-	Use: "version",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(getVersion())
-	},
-	Short: "Show version info",
-}
-
-func init() {
-	rootCmd.AddCommand(versionCmd)
+func newVersionCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use: "version",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(getVersion())
+		},
+		Short: "Show version info",
+	}
+	return cmd
 }

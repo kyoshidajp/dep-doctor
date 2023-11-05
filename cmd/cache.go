@@ -59,7 +59,7 @@ func (r *CacheStore) RebuildCacheStore(diagnoses map[string]Diagnosis, packageMa
 	}
 	packageManagers = append(packageManagers,
 		CachePackageManager{
-			Name:         o.packageManager,
+			Name:         packageManager,
 			Repositories: crepos,
 		},
 	)

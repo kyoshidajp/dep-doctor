@@ -3,13 +3,12 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"log"
+	"io"
 	"os"
 	"sort"
 	"strings"
 	"sync"
 
-	"github.com/aquasecurity/go-dep-parser/pkg/io"
 	parser_io "github.com/aquasecurity/go-dep-parser/pkg/io"
 	"github.com/aquasecurity/go-dep-parser/pkg/types"
 	dart "github.com/kyoshidajp/dep-doctor/cmd/dart/pub"
@@ -135,7 +134,7 @@ func FetchRepositoryParams(libs []types.Library, d Doctor, cache map[string]stri
 	return params
 }
 
-func Diagnose(d Doctor, r io.ReadSeekCloserAt, year int, ignores []string, cache map[string]string, disableCache bool) map[string]Diagnosis {
+func Diagnose(d Doctor, r parser_io.ReadSeekCloserAt, year int, ignores []string, cache map[string]string, disableCache bool) map[string]Diagnosis {
 	diagnoses := make(map[string]Diagnosis)
 	slicedParams := [][]github.FetchRepositoryParam{}
 	libs := d.Libraries(r)
@@ -199,22 +198,21 @@ func Report(diagnoses map[string]Diagnosis, strict_mode bool) error {
 	return reporter.Report()
 }
 
-type Options struct {
+type DiagnoseOption struct {
 	packageManager string
 	filePath       string
 	ignores        string
 	year           int
 	strict         bool
 	disableCache   bool
+
+	Out    io.Writer
+	ErrOut io.Writer
 }
 
-func (o *Options) Ignores() []string {
+func (o *DiagnoseOption) Ignores() []string {
 	return strings.Split(o.ignores, " ")
 }
-
-var (
-	o = &Options{}
-)
 
 type Doctors map[string]Doctor
 
@@ -247,56 +245,61 @@ var doctors = Doctors{
 	"yarn":      nodejs.NewYarnDoctor(),
 }
 
-var diagnoseCmd = &cobra.Command{
-	Use:   "diagnose",
-	Short: "Diagnose dependencies",
-	Run: func(cmd *cobra.Command, args []string) {
-		if err := Prepare(); err != nil {
-			log.Fatal(err)
-		}
+func newDiagnoseCmd(o *DiagnoseOption) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "diagnose",
+		Short: "Diagnose dependencies",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := Prepare(); err != nil {
+				return err
+			}
 
-		doctor, ok := doctors[o.packageManager]
-		if !ok {
-			m := doctors.UnknownErrorMessage(o.packageManager)
-			log.Fatal(m)
-		}
+			doctor, ok := doctors[o.packageManager]
+			if !ok {
+				m := doctors.UnknownErrorMessage(o.packageManager)
+				return fmt.Errorf(m)
+			}
 
-		filePath := o.filePath
-		f, err := os.Open(filePath)
-		defer func() {
-			_ = f.Close()
-		}()
-		if err != nil {
-			m := fmt.Sprintf("Can't open: %s.", o.filePath)
-			log.Fatal(m)
-		}
+			filePath := o.filePath
+			f, err := os.Open(filePath)
+			defer func() {
+				_ = f.Close()
+			}()
+			if err != nil {
+				m := fmt.Sprintf("Can't open: %s", o.filePath)
+				return fmt.Errorf(m)
+			}
 
-		cacheStore := BuildCacheStore()
-		cache := cacheStore.URLbyPackageManager(o.packageManager)
-		diagnoses := Diagnose(doctor, f, o.year, o.Ignores(), cache, o.disableCache)
-		if err := SaveCache(diagnoses, cacheStore, o.packageManager); err != nil {
-			log.Fatal(err)
-		}
+			cacheStore := BuildCacheStore()
+			cache := cacheStore.URLbyPackageManager(o.packageManager)
+			diagnoses := Diagnose(doctor, f, o.year, o.Ignores(), cache, o.disableCache)
+			if err := SaveCache(diagnoses, cacheStore, o.packageManager); err != nil {
+				return err
+			}
 
-		if err := Report(diagnoses, o.strict); err != nil {
-			os.Exit(1)
-		}
-	},
-}
+			if err := Report(diagnoses, o.strict); err != nil {
+				return fmt.Errorf("has error")
+			}
 
-func init() {
-	rootCmd.AddCommand(diagnoseCmd)
-	diagnoseCmd.Flags().StringVarP(&o.packageManager, "package", "p", "", "package manager")
-	diagnoseCmd.Flags().StringVarP(&o.filePath, "file", "f", "", "dependencies file path")
-	diagnoseCmd.Flags().StringVarP(&o.ignores, "ignores", "i", "", "ignore dependencies (separated by a space)")
-	diagnoseCmd.Flags().IntVarP(&o.year, "year", "y", MAX_YEAR_TO_BE_BLANK, "max years of inactivity")
-	diagnoseCmd.PersistentFlags().BoolVarP(&o.strict, "strict", "", false, "exit with non-zero if warnings exist")
-	diagnoseCmd.PersistentFlags().BoolVarP(&o.disableCache, "disable-cache", "", false, "without using cache")
+			return nil
+		},
+	}
+	cmd.Flags().StringVarP(&o.packageManager, "package", "p", "", "package manager")
+	cmd.Flags().StringVarP(&o.filePath, "file", "f", "", "dependencies file path")
+	cmd.Flags().StringVarP(&o.ignores, "ignores", "i", "", "ignore dependencies (separated by a space)")
+	cmd.Flags().IntVarP(&o.year, "year", "y", MAX_YEAR_TO_BE_BLANK, "max years of inactivity")
+	cmd.PersistentFlags().BoolVarP(&o.strict, "strict", "", false, "exit with non-zero if warnings exist")
+	cmd.PersistentFlags().BoolVarP(&o.disableCache, "disable-cache", "", false, "without using cache")
 
-	if err := diagnoseCmd.MarkFlagRequired("package"); err != nil {
+	cmd.SetOut(o.Out)
+	cmd.SetErr(o.ErrOut)
+
+	if err := cmd.MarkFlagRequired("package"); err != nil {
 		fmt.Println(err.Error())
 	}
-	if err := diagnoseCmd.MarkFlagRequired("file"); err != nil {
+	if err := cmd.MarkFlagRequired("file"); err != nil {
 		fmt.Println(err.Error())
 	}
+
+	return cmd
 }
