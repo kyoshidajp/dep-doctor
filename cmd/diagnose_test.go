@@ -208,6 +208,10 @@ func TestDoctors_UnknownErrorMessage(t *testing.T) {
 }
 
 func TestDiagnose_newDiagnoseCmd(t *testing.T) {
+	if testing.Short() {
+		t.SkipNow()
+	}
+
 	tests := []struct {
 		name          string
 		command       string
