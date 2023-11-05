@@ -14,7 +14,9 @@ func newRootCmd(out, errOut io.Writer) (*cobra.Command, error) {
 	o.ErrOut = errOut
 
 	cmd := &cobra.Command{
-		Use: "dep-doctor",
+		Use:           "dep-doctor",
+		SilenceErrors: true,
+		SilenceUsage:  true,
 	}
 	cmd.AddCommand(
 		newDiagnoseCmd(o),
