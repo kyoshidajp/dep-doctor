@@ -1,6 +1,7 @@
 package github
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -49,68 +50,100 @@ func TestGitHubRepository_IsActive(t *testing.T) {
 
 func TestParseGitHubURL(t *testing.T) {
 	tests := []struct {
-		name string
-		url  string
+		name           string
+		URL            string
+		wantRepository GitHubRepository
+		wantErr        error
 	}{
 		{
 			name: "starts github.com",
-			url:  "github.com/bvaughn/highlight-words-core.git",
+			URL:  "github.com/bvaughn/highlight-words-core.git",
+			wantRepository: GitHubRepository{
+				Owner: "bvaughn",
+				Repo:  "highlight-words-core",
+				URL:   "github.com/bvaughn/highlight-words-core.git",
+			},
+			wantErr: nil,
 		},
 		{
 			name: "starts https://",
-			url:  "https://github.com/rails/thor/tree/v1.3.0",
+			URL:  "https://github.com/rails/thor/tree/v1.3.0",
+			wantRepository: GitHubRepository{
+				Owner: "rails",
+				Repo:  "thor",
+				URL:   "https://github.com/rails/thor/tree/v1.3.0",
+			},
+			wantErr: nil,
 		},
 		{
 			name: "starts git@",
-			url:  "git@github.com:rails/thor.git",
+			URL:  "git@github.com:rails/thor.git",
+			wantRepository: GitHubRepository{
+				Owner: "rails",
+				Repo:  "thor",
+				URL:   "git@github.com:rails/thor.git",
+			},
+			wantErr: nil,
 		},
 		{
 			name: "starts git+https://",
-			url:  "git+https://github.com/then/promise.git",
+			URL:  "git+https://github.com/then/promise.git",
+			wantRepository: GitHubRepository{
+				Owner: "then",
+				Repo:  "promise",
+				URL:   "git+https://github.com/then/promise.git",
+			},
+			wantErr: nil,
 		},
 		{
 			name: "starts git://",
-			url:  "git://github.com/es-shims/typedarray.git",
+			URL:  "git://github.com/es-shims/typedarray.git",
+			wantRepository: GitHubRepository{
+				Owner: "es-shims",
+				Repo:  "typedarray",
+				URL:   "git://github.com/es-shims/typedarray.git",
+			},
+			wantErr: nil,
 		},
 		{
 			name: "starts git+ssh://",
-			url:  "git+ssh://git@github.com/DABH/colors.js.git",
+			URL:  "git+ssh://git@github.com/DABH/colors.js.git",
+			wantRepository: GitHubRepository{
+				Owner: "DABH",
+				Repo:  "colors.js",
+				URL:   "git+ssh://git@github.com/DABH/colors.js.git",
+			},
+			wantErr: nil,
 		},
-	}
-
-	expects := map[string]GitHubRepository{
-		"starts github.com": {
-			Owner: "bvaughn",
-			Repo:  "highlight-words-core",
+		{
+			name: "blank",
+			URL:  "",
+			wantRepository: GitHubRepository{
+				Owner: "",
+				Repo:  "",
+				URL:   "",
+			},
+			wantErr: fmt.Errorf("source code URL is blank"),
 		},
-		"starts https://": {
-			Owner: "rails",
-			Repo:  "thor",
-		},
-		"starts git@": {
-			Owner: "rails",
-			Repo:  "thor",
-		},
-		"starts git+https://": {
-			Owner: "then",
-			Repo:  "promise",
-		},
-		"starts git://": {
-			Owner: "es-shims",
-			Repo:  "typedarray",
-		},
-		"starts git+ssh://": {
-			Owner: "DABH",
-			Repo:  "colors.js",
+		{
+			name: "invalid URL",
+			URL:  "https://example.com",
+			wantRepository: GitHubRepository{
+				Owner: "",
+				Repo:  "",
+				URL:   "",
+			},
+			wantErr: fmt.Errorf("unknown source code URL: https://example.com"),
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r, _ := ParseGitHubURL(tt.url)
-			expect := expects[tt.name]
-			assert.Equal(t, expect.Owner, r.Owner)
-			assert.Equal(t, expect.Repo, r.Repo)
+			got, err := ParseGitHubURL(tt.URL)
+			wantRepository := tt.wantRepository
+			assert.Equal(t, wantRepository.Owner, got.Owner)
+			assert.Equal(t, wantRepository.Repo, got.Repo)
+			assert.Equal(t, tt.wantErr, err)
 		})
 	}
 }
