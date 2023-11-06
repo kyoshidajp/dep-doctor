@@ -3,7 +3,7 @@ module github.com/kyoshidajp/dep-doctor
 go 1.20
 
 require (
-	github.com/spf13/cobra v1.7.0
+	github.com/spf13/cobra v1.8.0
 	golang.org/x/exp v0.0.0-20220407100705-7b9b53b0aca4
 	gopkg.in/yaml.v3 v3.0.1
 )
