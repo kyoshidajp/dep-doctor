@@ -15,6 +15,8 @@ However, some libraries have archived their source code repositories or have had
 | Dart | pub | pubspec.lock | :heavy_check_mark: |
 | Erlang/Elixir | mix | mix.lock | :heavy_check_mark: |
 | Go | golang | go.mod | :heavy_check_mark: |
+| Java | gradle | gradle.lockfile | (later) |
+| Java | maven | pom.xml | (later) |
 | JavaScript | npm | package-lock.json | :heavy_check_mark: |
 | JavaScript | yarn | yarn.lock | :heavy_check_mark: |
 | PHP | composer | composer.lock | :heavy_check_mark: |
