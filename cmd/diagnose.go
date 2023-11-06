@@ -241,6 +241,7 @@ var doctors = Doctors{
 	"mix":       erlang_elixir.NewMixDoctor(),
 	"pip":       python.NewPipDoctor(),
 	"pipenv":    python.NewPipenvDoctor(),
+	"poetry":    python.NewPoetryDoctor(),
 	"pub":       dart.NewPubDoctor(),
 	"yarn":      nodejs.NewYarnDoctor(),
 }

@@ -300,7 +300,7 @@ func TestDiagnose_newDiagnoseCmd(t *testing.T) {
 			name:          "unknown package manager",
 			command:       "--package unknown --file ruby/bundler/testdata/Gemfile.lock",
 			wantOutWriter: "",
-			wantErrWriter: "Unknown package manager: unknown. You can choose from [bundler, cargo, cocoapods, composer, golang, mix, npm, pip, pipenv, pub, yarn]",
+			wantErrWriter: "Unknown package manager: unknown. You can choose from [bundler, cargo, cocoapods, composer, golang, mix, npm, pip, pipenv, poetry, pub, yarn]",
 			wantErr:       true,
 		},
 		{
