@@ -6,6 +6,8 @@ require github.com/spf13/cobra v1.7.0
 
 require (
 	github.com/BurntSushi/toml v1.3.2 // indirect
+	github.com/aquasecurity/go-pep440-version v0.0.0-20210121094942-22b2f8951d46 // indirect
+	github.com/aquasecurity/go-version v0.0.0-20210121072130-637058cfe492 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/liamg/jfather v0.0.7 // indirect
