@@ -159,19 +159,31 @@ func Diagnose(d Doctor, r parser_io.ReadSeekCloserAt, year int, ignores []string
 			defer wg.Done()
 			defer func() { <-sem }()
 
+			reposByName := make(map[string]github.GitHubRepository)
 			repos := github.FetchFromGitHub(params)
 			for _, r := range repos {
-				isIgnore := slices.Contains(ignores, r.Name)
-				diagnosis := Diagnosis{
-					Name:      r.Name,
-					URL:       r.URL,
-					Archived:  r.Archived,
-					Ignored:   isIgnore,
-					Diagnosed: true,
-					IsActive:  r.IsActive(year),
-					Error:     r.Error,
+				reposByName[r.Repo] = r
+			}
+
+			for _, params := range slicedParams {
+				for _, param := range params {
+					r, ok := reposByName[param.RepoOwner()]
+					if !ok {
+						continue
+					}
+
+					willIgnore := slices.Contains(ignores, r.Name)
+					diagnosis := Diagnosis{
+						Name:      param.PackageName,
+						URL:       r.URL,
+						Archived:  r.Archived,
+						Ignored:   willIgnore,
+						Diagnosed: true,
+						IsActive:  r.IsActive(year),
+						Error:     r.Error,
+					}
+					diagnoses[r.Name] = diagnosis
 				}
-				diagnoses[r.Name] = diagnosis
 			}
 		}(params)
 	}

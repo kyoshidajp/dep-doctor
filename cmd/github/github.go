@@ -45,6 +45,10 @@ func (n FetchRepositoryParam) QueryWord() string {
 	return fmt.Sprintf("repo:%s/%s", n.Owner, n.Repo)
 }
 
+func (p FetchRepositoryParam) RepoOwner() string {
+	return fmt.Sprintf("%s/%s", p.Owner, p.Repo)
+}
+
 type GitHubURL struct {
 	URL string
 }
