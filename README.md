@@ -6,7 +6,7 @@ Today, most software relies heavily on external libraries. Vulnerabilities in th
 
 However, some libraries have archived their source code repositories or have had their development stopped, although not explicitly. `dep-doctor` will notify you of those libraries in the dependencies file.
 
-![overview](doc/images/dep-doctor_overview.png "dep-doctor overview")
+![overview](doc/images/dep-doctor_overview.svg "dep-doctor overview")
 
 ## Support dependencies files
 
@@ -140,7 +140,7 @@ jobs:
 
 ## How it works
 
-![how_works](doc/images/how_works.png "dep-doctor how works")
+![how_works](doc/images/how_works.svg "dep-doctor how works")
 
 ## Author
 Katsuhiko YOSHIDA
