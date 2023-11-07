@@ -65,6 +65,33 @@ func (p RepositoryParams) SearchableParams() []github.FetchRepositoryParam {
 	return params
 }
 
+type Libraries []types.Library
+
+func (libs Libraries) Uniq() Libraries {
+	nameWithLib := map[string]types.Library{}
+	for _, lib := range libs {
+		nameWithLib[lib.Name] = lib
+	}
+
+	var uniqLibs Libraries
+	for _, lib := range nameWithLib {
+		uniqLibs = append(uniqLibs, lib)
+	}
+	sort.SliceStable(uniqLibs, func(i, j int) bool { return uniqLibs[i].Name < uniqLibs[j].Name })
+
+	return uniqLibs
+}
+
+func NewLibraries(libs []types.Library) Libraries {
+	var newLibs Libraries
+	for _, lib := range libs {
+		newLibs = append(newLibs, lib)
+	}
+	sort.SliceStable(newLibs, func(i, j int) bool { return newLibs[i].Name < newLibs[j].Name })
+
+	return newLibs
+}
+
 func Prepare() error {
 	token := os.Getenv(github.TOKEN_NAME)
 	if len(token) == 0 {
@@ -137,7 +164,7 @@ func FetchRepositoryParams(libs []types.Library, d Doctor, cache map[string]stri
 func Diagnose(d Doctor, r parser_io.ReadSeekCloserAt, year int, ignores []string, cache map[string]string, disableCache bool) map[string]Diagnosis {
 	diagnoses := make(map[string]Diagnosis)
 	slicedParams := [][]github.FetchRepositoryParam{}
-	libs := d.Libraries(r)
+	libs := NewLibraries(d.Libraries(r)).Uniq()
 	fetchRepositoryParams := FetchRepositoryParams(libs, d, cache, disableCache)
 	searchableRepositoryParams := fetchRepositoryParams.SearchableParams()
 	sliceSize := len(searchableRepositoryParams)
