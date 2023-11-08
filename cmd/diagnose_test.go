@@ -62,9 +62,12 @@ func TestDiagnose(t *testing.T) {
 		defer f.Close()
 
 		doctor := ruby.NewBundlerDoctor()
-		ignores := []string{"i18n"}
 		cache := map[string]string{}
-		diagnoses := Diagnose(doctor, f, 2, ignores, cache, false)
+		o := DiagnoseOption{
+			ignores: "i18n",
+			year:    5,
+		}
+		diagnoses := Diagnose(doctor, f, cache, o)
 		assert.Equal(t, expect, diagnoses)
 	})
 }
@@ -336,7 +339,7 @@ func TestDiagnose_newDiagnoseCmd(t *testing.T) {
 				ErrOut: errWriter,
 			}
 
-			cmd := newDiagnoseCmd(o)
+			cmd := newDiagnoseCmd(*o)
 			if tt.command != "" {
 				cmd.SetArgs(strings.Split(tt.command, " "))
 			}

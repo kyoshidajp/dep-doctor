@@ -89,7 +89,7 @@ func (params RepositoryParams) SlicedParams() [][]github.FetchRepositoryParam {
 	return slicedParams
 }
 
-func (params RepositoryParams) diagnoses(searchedRepos []github.GitHubRepository, ignores []string, year int) map[string]Diagnosis {
+func (params RepositoryParams) diagnoses(searchedRepos []github.GitHubRepository, o DiagnoseOption) map[string]Diagnosis {
 	repoByName := make(map[string]github.GitHubRepository)
 	for _, r := range searchedRepos {
 		uniqKey := r.RepoOwner()
@@ -102,14 +102,14 @@ func (params RepositoryParams) diagnoses(searchedRepos []github.GitHubRepository
 		diagnosis := Diagnosis{}
 		repo, ok := repoByName[uniqKey]
 		if ok {
-			willIgnore := slices.Contains(ignores, repo.Name)
+			willIgnore := slices.Contains(o.Ignores(), repo.Name)
 			diagnosis = Diagnosis{
 				Name:      param.PackageName,
 				URL:       repo.URL,
 				Archived:  repo.Archived,
 				Ignored:   willIgnore,
 				Diagnosed: true,
-				IsActive:  repo.IsActive(year),
+				IsActive:  repo.IsActive(o.year),
 				Error:     repo.Error,
 			}
 			diagnoses[repo.Name] = diagnosis
@@ -221,9 +221,9 @@ func FetchRepositoryParams(libs []types.Library, d Doctor, cache map[string]stri
 	return params
 }
 
-func Diagnose(d Doctor, r parser_io.ReadSeekCloserAt, year int, ignores []string, cache map[string]string, disableCache bool) map[string]Diagnosis {
+func Diagnose(d Doctor, r parser_io.ReadSeekCloserAt, cache map[string]string, o DiagnoseOption) map[string]Diagnosis {
 	libs := NewLibraries(d.Libraries(r)).Uniq()
-	searchParams := FetchRepositoryParams(libs, d, cache, disableCache)
+	searchParams := FetchRepositoryParams(libs, d, cache, o.disableCache)
 	slicedSearchParams := searchParams.SlicedParams()
 	searchedRepos := []github.GitHubRepository{}
 
@@ -242,7 +242,7 @@ func Diagnose(d Doctor, r parser_io.ReadSeekCloserAt, year int, ignores []string
 	}
 	wg.Wait()
 
-	diagnoses := searchParams.diagnoses(searchedRepos, ignores, year)
+	diagnoses := searchParams.diagnoses(searchedRepos, o)
 	return diagnoses
 }
 
@@ -299,7 +299,7 @@ var doctors = Doctors{
 	"yarn":      nodejs.NewYarnDoctor(),
 }
 
-func newDiagnoseCmd(o *DiagnoseOption) *cobra.Command {
+func newDiagnoseCmd(o DiagnoseOption) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "diagnose",
 		Short: "Diagnose dependencies",
@@ -326,7 +326,7 @@ func newDiagnoseCmd(o *DiagnoseOption) *cobra.Command {
 
 			cacheStore := BuildCacheStore()
 			cache := cacheStore.URLbyPackageManager(o.packageManager)
-			diagnoses := Diagnose(doctor, f, o.year, o.Ignores(), cache, o.disableCache)
+			diagnoses := Diagnose(doctor, f, cache, o)
 			if err := SaveCache(diagnoses, cacheStore, o.packageManager); err != nil {
 				return err
 			}

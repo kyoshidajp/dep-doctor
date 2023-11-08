@@ -171,13 +171,15 @@ func TestFetchFromGitHub(t *testing.T) {
 	expect := []GitHubRepository{
 		{
 			Name:     "rails",
-			Repo:     "rails/rails",
+			Owner:    "rails",
+			Repo:     "rails",
 			URL:      "https://github.com/rails/rails",
 			Archived: false,
 		},
 		{
 			Name:     "strong_parameters",
-			Repo:     "rails/strong_parameters",
+			Owner:    "rails",
+			Repo:     "strong_parameters",
 			URL:      "https://github.com/rails/strong_parameters",
 			Archived: true,
 		},

@@ -9,7 +9,7 @@ import (
 )
 
 func newRootCmd(out, errOut io.Writer) (*cobra.Command, error) {
-	o := &DiagnoseOption{}
+	o := DiagnoseOption{}
 	o.Out = out
 	o.ErrOut = errOut
 
