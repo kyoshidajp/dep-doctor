@@ -17,10 +17,10 @@ func NewPoetryDoctor() *PoetryDoctor {
 	return &PoetryDoctor{HTTPClient: *client}
 }
 
-func (d *PoetryDoctor) Libraries(r parser_io.ReadSeekerAt) []types.Library {
+func (d *PoetryDoctor) Parse(r parser_io.ReadSeekerAt) (types.Libraries, error) {
 	p := poetry.NewParser()
-	libs, _, _ := p.Parse(r)
-	return libs
+	libs, _, err := p.Parse(r)
+	return libs, err
 }
 
 func (d *PoetryDoctor) SourceCodeURL(lib types.Library) (string, error) {

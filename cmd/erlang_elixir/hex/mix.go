@@ -17,10 +17,10 @@ func NewMixDoctor() *MixDoctor {
 	return &MixDoctor{HTTPClient: *client}
 }
 
-func (d *MixDoctor) Libraries(r parser_io.ReadSeekerAt) []types.Library {
+func (d *MixDoctor) Parse(r parser_io.ReadSeekerAt) (types.Libraries, error) {
 	p := &mix.Parser{}
-	libs, _, _ := p.Parse(r)
-	return libs
+	libs, _, err := p.Parse(r)
+	return libs, err
 }
 
 func (d *MixDoctor) SourceCodeURL(lib types.Library) (string, error) {

@@ -49,7 +49,7 @@ func (d *Diagnosis) ErrorMessage() string {
 }
 
 type Doctor interface {
-	Libraries(r parser_io.ReadSeekerAt) []types.Library
+	Parse(r parser_io.ReadSeekerAt) (types.Libraries, error)
 	SourceCodeURL(lib types.Library) (string, error)
 }
 
@@ -99,7 +99,7 @@ func (params RepositoryParams) diagnoses(searchedRepos []github.GitHubRepository
 	diagnoses := make(map[string]Diagnosis)
 	for _, param := range params {
 		uniqKey := param.RepoOwner()
-		diagnosis := Diagnosis{}
+		var diagnosis Diagnosis
 		repo, ok := repoByName[uniqKey]
 		if ok {
 			willIgnore := slices.Contains(o.Ignores(), repo.Name)
@@ -222,7 +222,8 @@ func FetchRepositoryParams(libs []types.Library, d Doctor, cache map[string]stri
 }
 
 func Diagnose(d Doctor, r parser_io.ReadSeekCloserAt, cache map[string]string, o DiagnoseOption) map[string]Diagnosis {
-	libs := NewLibraries(d.Libraries(r)).Uniq()
+	orgLibs, _ := d.Parse(r)
+	libs := NewLibraries(orgLibs).Uniq()
 	searchParams := FetchRepositoryParams(libs, d, cache, o.disableCache)
 	slicedSearchParams := searchParams.SlicedParams()
 	searchedRepos := []github.GitHubRepository{}

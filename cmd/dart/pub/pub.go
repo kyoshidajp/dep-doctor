@@ -73,10 +73,10 @@ func NewPubDoctor() *PubDoctor {
 	return &PubDoctor{}
 }
 
-func (d *PubDoctor) Libraries(r parser_io.ReadSeekerAt) []types.Library {
+func (d *PubDoctor) Parse(r parser_io.ReadSeekerAt) (types.Libraries, error) {
 	p := pub.NewParser()
-	libs, _, _ := p.Parse(r)
-	return libs
+	libs, _, err := p.Parse(r)
+	return libs, err
 }
 
 func (d *PubDoctor) SourceCodeURL(lib types.Library) (string, error) {

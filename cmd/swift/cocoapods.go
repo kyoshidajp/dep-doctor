@@ -27,10 +27,10 @@ func NewCococaPodsDoctor() *CocoaPodsDoctor {
 	return &CocoaPodsDoctor{HTTPClient: *client}
 }
 
-func (d *CocoaPodsDoctor) Libraries(r parser_io.ReadSeekerAt) []types.Library {
+func (d *CocoaPodsDoctor) Parse(r parser_io.ReadSeekerAt) (types.Libraries, error) {
 	p := &cocoapods.Parser{}
-	libs, _, _ := p.Parse(r)
-	return libs
+	libs, _, err := p.Parse(r)
+	return libs, err
 }
 
 func (d *CocoaPodsDoctor) SourceCodeURL(lib types.Library) (string, error) {

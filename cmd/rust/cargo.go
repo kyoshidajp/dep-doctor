@@ -3,7 +3,7 @@ package rust
 import (
 	"net/http"
 
-	parser_io "github.com/aquasecurity/go-dep-parser/pkg/io"
+	"github.com/aquasecurity/go-dep-parser/pkg/io"
 	"github.com/aquasecurity/go-dep-parser/pkg/rust/cargo"
 	"github.com/aquasecurity/go-dep-parser/pkg/types"
 )
@@ -17,10 +17,10 @@ func NewCargoDoctor() *CargoDoctor {
 	return &CargoDoctor{HTTPClient: *client}
 }
 
-func (d *CargoDoctor) Libraries(r parser_io.ReadSeekerAt) []types.Library {
+func (d *CargoDoctor) Parse(r io.ReadSeekerAt) (types.Libraries, error) {
 	p := &cargo.Parser{}
-	libs, _, _ := p.Parse(r)
-	return libs
+	libs, _, err := p.Parse(r)
+	return libs, err
 }
 
 func (d *CargoDoctor) SourceCodeURL(lib types.Library) (string, error) {
