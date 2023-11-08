@@ -133,7 +133,7 @@ func FetchFromGitHub(params []FetchRepositoryParam) []GitHubRepository {
 					Name          githubv4.String
 					Owner         struct {
 						Login githubv4.String
-					} `graphql:"... on Owner`
+					}
 					DefaultBranchRef struct {
 						Target struct {
 							Commit struct {
