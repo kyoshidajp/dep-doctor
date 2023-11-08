@@ -20,7 +20,7 @@ func TestDiagnose(t *testing.T) {
 			Archived:  false,
 			Ignored:   false,
 			Diagnosed: true,
-			IsActive:  true,
+			Active:    true,
 		},
 		"concurrent-ruby": {
 			Name:      "concurrent-ruby",
@@ -28,7 +28,7 @@ func TestDiagnose(t *testing.T) {
 			Archived:  false,
 			Ignored:   false,
 			Diagnosed: true,
-			IsActive:  true,
+			Active:    true,
 		},
 		"i18n": {
 			Name:      "i18n",
@@ -36,7 +36,7 @@ func TestDiagnose(t *testing.T) {
 			Archived:  false,
 			Ignored:   true,
 			Diagnosed: true,
-			IsActive:  true,
+			Active:    true,
 		},
 		"method_source": {
 			Name:      "method_source",
@@ -44,7 +44,7 @@ func TestDiagnose(t *testing.T) {
 			Archived:  false,
 			Ignored:   false,
 			Diagnosed: true,
-			IsActive:  true,
+			Active:    true,
 		},
 		"dotenv": {
 			Name:      "dotenv",
@@ -52,7 +52,7 @@ func TestDiagnose(t *testing.T) {
 			Archived:  false,
 			Ignored:   false,
 			Diagnosed: true,
-			IsActive:  true,
+			Active:    true,
 		},
 	}
 

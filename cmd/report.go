@@ -62,7 +62,7 @@ func (r *StdoutReporter) Report() error {
 			errMessages = append(errMessages, fmt.Sprintf("[error] %s (archived): %s", diagnosis.Name, diagnosis.URL))
 			errCount += 1
 		}
-		if !diagnosis.IsActive {
+		if !diagnosis.Active {
 			warnMessages = append(warnMessages, fmt.Sprintf("[warn] %s (not-maintained): %s", diagnosis.Name, diagnosis.URL))
 			warnCount += 1
 		}

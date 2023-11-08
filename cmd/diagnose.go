@@ -37,7 +37,7 @@ type Diagnosis struct {
 	Archived  bool
 	Ignored   bool
 	Diagnosed bool
-	IsActive  bool
+	Active    bool
 	Error     error
 }
 
@@ -109,7 +109,7 @@ func (params RepositoryParams) diagnoses(searchedRepos []github.GitHubRepository
 				Archived:  repo.Archived,
 				Ignored:   willIgnore,
 				Diagnosed: true,
-				IsActive:  repo.IsActive(o.year),
+				Active:    repo.IsActive(o.year),
 				Error:     repo.Error,
 			}
 			diagnoses[repo.Name] = diagnosis
