@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -22,7 +23,6 @@ import (
 	"github.com/kyoshidajp/dep-doctor/cmd/rust"
 	"github.com/kyoshidajp/dep-doctor/cmd/swift"
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/slices"
 )
 
 const MAX_YEAR_TO_BE_BLANK = 5
@@ -55,14 +55,74 @@ type Doctor interface {
 
 type RepositoryParams []github.FetchRepositoryParam
 
-func (p RepositoryParams) SearchableParams() []github.FetchRepositoryParam {
-	params := []github.FetchRepositoryParam{}
-	for _, param := range p {
+func (params RepositoryParams) SearchableParams() []github.FetchRepositoryParam {
+	uniqParams := map[string]github.FetchRepositoryParam{}
+	for _, param := range params {
+		uniqKey := param.RepoOwner()
+		uniqParams[uniqKey] = param
+	}
+
+	searchableParams := []github.FetchRepositoryParam{}
+	for _, param := range uniqParams {
 		if param.Searchable {
-			params = append(params, param)
+			searchableParams = append(searchableParams, param)
 		}
 	}
-	return params
+	sort.SliceStable(searchableParams, func(i, j int) bool { return searchableParams[i].PackageName < searchableParams[j].PackageName })
+
+	return searchableParams
+}
+
+func (params RepositoryParams) SlicedParams() [][]github.FetchRepositoryParam {
+	slicedParams := [][]github.FetchRepositoryParam{}
+	searchableParams := params.SearchableParams()
+	sliceSize := len(searchableParams)
+
+	for i := 0; i < sliceSize; i += github.SEARCH_REPOS_PER_ONCE {
+		end := i + github.SEARCH_REPOS_PER_ONCE
+		if sliceSize < end {
+			end = sliceSize
+		}
+		slicedParams = append(slicedParams, searchableParams[i:end])
+	}
+
+	return slicedParams
+}
+
+func (params RepositoryParams) diagnoses(searchedRepos []github.GitHubRepository, ignores []string, year int) map[string]Diagnosis {
+	repoByName := make(map[string]github.GitHubRepository)
+	for _, r := range searchedRepos {
+		uniqKey := r.RepoOwner()
+		repoByName[uniqKey] = r
+	}
+
+	diagnoses := make(map[string]Diagnosis)
+	for _, param := range params {
+		uniqKey := param.RepoOwner()
+		diagnosis := Diagnosis{}
+		repo, ok := repoByName[uniqKey]
+		if ok {
+			willIgnore := slices.Contains(ignores, repo.Name)
+			diagnosis = Diagnosis{
+				Name:      param.PackageName,
+				URL:       repo.URL,
+				Archived:  repo.Archived,
+				Ignored:   willIgnore,
+				Diagnosed: true,
+				IsActive:  repo.IsActive(year),
+				Error:     repo.Error,
+			}
+			diagnoses[repo.Name] = diagnosis
+		} else {
+			diagnosis = Diagnosis{
+				Name:      param.PackageName,
+				Diagnosed: false,
+				Error:     param.Error,
+			}
+		}
+		diagnoses[param.PackageName] = diagnosis
+	}
+	return diagnoses
 }
 
 type Libraries []types.Library
@@ -162,73 +222,27 @@ func FetchRepositoryParams(libs []types.Library, d Doctor, cache map[string]stri
 }
 
 func Diagnose(d Doctor, r parser_io.ReadSeekCloserAt, year int, ignores []string, cache map[string]string, disableCache bool) map[string]Diagnosis {
-	diagnoses := make(map[string]Diagnosis)
-	slicedParams := [][]github.FetchRepositoryParam{}
 	libs := NewLibraries(d.Libraries(r)).Uniq()
-	fetchRepositoryParams := FetchRepositoryParams(libs, d, cache, disableCache)
-	searchableRepositoryParams := fetchRepositoryParams.SearchableParams()
-	sliceSize := len(searchableRepositoryParams)
-
-	for i := 0; i < sliceSize; i += github.SEARCH_REPOS_PER_ONCE {
-		end := i + github.SEARCH_REPOS_PER_ONCE
-		if sliceSize < end {
-			end = sliceSize
-		}
-		slicedParams = append(slicedParams, searchableRepositoryParams[i:end])
-	}
+	searchParams := FetchRepositoryParams(libs, d, cache, disableCache)
+	slicedSearchParams := searchParams.SlicedParams()
+	searchedRepos := []github.GitHubRepository{}
 
 	var wg sync.WaitGroup
 	sem := make(chan struct{}, FETCH_REPOS_PER_ONCE)
-	for _, params := range slicedParams {
+	for _, params := range slicedSearchParams {
 		wg.Add(1)
 		sem <- struct{}{}
 		go func(params []github.FetchRepositoryParam) {
 			defer wg.Done()
 			defer func() { <-sem }()
 
-			reposByName := make(map[string]github.GitHubRepository)
-			repos := github.FetchFromGitHub(params)
-			for _, r := range repos {
-				reposByName[r.Repo] = r
-			}
-
-			for _, params := range slicedParams {
-				for _, param := range params {
-					r, ok := reposByName[param.RepoOwner()]
-					if !ok {
-						continue
-					}
-
-					willIgnore := slices.Contains(ignores, r.Name)
-					diagnosis := Diagnosis{
-						Name:      param.PackageName,
-						URL:       r.URL,
-						Archived:  r.Archived,
-						Ignored:   willIgnore,
-						Diagnosed: true,
-						IsActive:  r.IsActive(year),
-						Error:     r.Error,
-					}
-					diagnoses[r.Name] = diagnosis
-				}
-			}
+			tmpRepos := github.FetchFromGitHub(params)
+			searchedRepos = append(searchedRepos, tmpRepos...)
 		}(params)
 	}
-
 	wg.Wait()
 
-	for _, fetchRepositoryParam := range fetchRepositoryParams {
-		if fetchRepositoryParam.Searchable {
-			continue
-		}
-
-		diagnosis := Diagnosis{
-			Name:      fetchRepositoryParam.PackageName,
-			Diagnosed: false,
-			Error:     fetchRepositoryParam.Error,
-		}
-		diagnoses[fetchRepositoryParam.PackageName] = diagnosis
-	}
+	diagnoses := searchParams.diagnoses(searchedRepos, ignores, year)
 	return diagnoses
 }
 

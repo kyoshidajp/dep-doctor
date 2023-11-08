@@ -33,6 +33,10 @@ func (r GitHubRepository) IsActive(year int) bool {
 	return targetDate.After(now)
 }
 
+func (r GitHubRepository) RepoOwner() string {
+	return fmt.Sprintf("%s/%s", r.Owner, r.Repo)
+}
+
 type FetchRepositoryParam struct {
 	PackageName string
 	Repo        string
@@ -122,11 +126,14 @@ func FetchFromGitHub(params []FetchRepositoryParam) []GitHubRepository {
 			RepositoryCount githubv4.Int
 			Nodes           []struct {
 				Repository struct {
-					IsArchived       githubv4.Boolean
-					NameWithOwner    githubv4.String
-					IsMirror         githubv4.Boolean
-					Url              githubv4.String
-					Name             githubv4.String
+					IsArchived    githubv4.Boolean
+					NameWithOwner githubv4.String
+					IsMirror      githubv4.Boolean
+					Url           githubv4.String
+					Name          githubv4.String
+					Owner         struct {
+						Login githubv4.String
+					} `graphql:"... on Owner`
 					DefaultBranchRef struct {
 						Target struct {
 							Commit struct {
@@ -172,7 +179,8 @@ func FetchFromGitHub(params []FetchRepositoryParam) []GitHubRepository {
 		nodeRepo := node.Repository
 		lastCommit := nodeRepo.DefaultBranchRef.Target.Commit.History.Edges[0].Node
 		repos = append(repos, GitHubRepository{
-			Repo:            string(nodeRepo.NameWithOwner),
+			Repo:            string(nodeRepo.Name),
+			Owner:           string(nodeRepo.Owner.Login),
 			Archived:        bool(nodeRepo.IsArchived),
 			URL:             string(nodeRepo.Url),
 			Name:            string(nodeRepo.Name),
