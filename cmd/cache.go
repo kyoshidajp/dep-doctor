@@ -18,6 +18,9 @@ func (r *CacheStore) URLbyPackageManager(packageManager string) map[string]strin
 	for i, p := range r.PackageManagers {
 		if p.Name == packageManager {
 			for _, repo := range r.PackageManagers[i].Repositories {
+				if repo.SourceURL == "" {
+					continue
+				}
 				repos[repo.Name] = repo.SourceURL
 			}
 		}

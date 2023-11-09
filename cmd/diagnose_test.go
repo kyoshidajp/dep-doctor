@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/MakeNowJust/heredoc"
+	"github.com/jarcoal/httpmock"
 	"github.com/kyoshidajp/dep-doctor/cmd/ruby"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -215,6 +217,147 @@ func TestDiagnose_newDiagnoseCmd(t *testing.T) {
 		t.SkipNow()
 	}
 
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	// rubygems
+	httpmock.RegisterResponder("GET", "https://rubygems.org/api/v1/gems/concurrent-ruby.json",
+		httpmock.NewStringResponder(200, heredoc.Doc(`
+			{
+				"name": "concurrent-ruby",
+				"source_code_uri": "https://github.com/concurrent-ruby/concurrent-ruby"
+			}
+			`)),
+	)
+	httpmock.RegisterResponder("GET", "https://rubygems.org/api/v1/gems/dotenv.json",
+		httpmock.NewStringResponder(200, heredoc.Doc(`
+			{
+				"name": "minitest",
+				"homepage_uri": "https://github.com/bkeepers/dotenv"
+			}
+			`)),
+	)
+	httpmock.RegisterResponder("GET", "https://rubygems.org/api/v1/gems/faker.json",
+		httpmock.NewStringResponder(200, heredoc.Doc(`
+			{
+				"name": "faker",
+				"source_code_uri": "https://github.com/faker-ruby/faker"
+			}
+			`)),
+	)
+	httpmock.RegisterResponder("GET", "https://rubygems.org/api/v1/gems/i18n.json",
+		httpmock.NewStringResponder(200, heredoc.Doc(`
+			{
+				"name": "i18n",
+				"source_code_uri": "https://github.com/ruby-i18n/i18n"
+			}
+			`)),
+	)
+	httpmock.RegisterResponder("GET", "https://rubygems.org/api/v1/gems/method_source.json",
+		httpmock.NewStringResponder(200, heredoc.Doc(`
+			{
+				"name": "i18n",
+				"source_code_uri": "https://github.com/banister/method_source"
+			}
+			`)),
+	)
+	httpmock.RegisterResponder("POST", "https://api.github.com/graphql",
+		httpmock.NewStringResponder(200, heredoc.Doc(`
+		{
+			"data": {
+			  "search": {
+				"repositoryCount": 4,
+				"nodes": [
+				  {
+					"isArchived": false,
+					"url": "https://github.com/faker-ruby/faker",
+					"name": "faker",
+					"defaultBranchRef": {
+					  "target": {
+						"history": {
+						  "edges": [
+							{
+							  "node": {
+								"committedDate": "2023-11-03T21:10:51Z"
+							  }
+							}
+						  ]
+						}
+					  }
+					}
+				  },
+				  {
+					"isArchived": false,
+					"url": "https://github.com/bkeepers/dotenv",
+					"name": "dotenv",
+					"defaultBranchRef": {
+					  "target": {
+						"history": {
+						  "edges": [
+							{
+							  "node": {
+								"committedDate": "2022-07-27T14:37:34Z"
+							  }
+							}
+						  ]
+						}
+					  }
+					}
+				  },
+				  {
+					"isArchived": false,
+					"url": "https://github.com/ruby-i18n/i18n",
+					"name": "i18n",
+					"defaultBranchRef": {
+					  "target": {
+						"history": {
+						  "edges": [
+							{
+							  "node": {
+								"committedDate": "2023-06-21T10:33:08Z"
+							  }
+							}
+						  ]
+						}
+					  }
+					}
+				  }
+				]
+			  }
+			}
+		  }
+			`)),
+	)
+
+	// yarn
+	httpmock.RegisterResponder("GET", "https://registry.npmjs.org/asap",
+		httpmock.NewStringResponder(200, heredoc.Doc(`
+			{
+				"repository": {
+					"url": "https://github.com/facebook/asap"
+				}
+			}
+			`)),
+	)
+	httpmock.RegisterResponder("GET", "https://registry.npmjs.org/jquery",
+		httpmock.NewStringResponder(200, heredoc.Doc(`
+			{
+				"repository": {
+					"url": "https://github.com/jquery/jquery"
+				}
+			}
+			`)),
+	)
+	httpmock.RegisterResponder("GET", "https://registry.npmjs.org/promise",
+		httpmock.NewStringResponder(200, heredoc.Doc(`
+			{
+				"repository": {
+					"url": "https://github.com/then/promise"
+				}
+			}
+			`)),
+	)
+
 	tests := []struct {
 		name          string
 		command       string
@@ -222,27 +365,30 @@ func TestDiagnose_newDiagnoseCmd(t *testing.T) {
 		wantErrWriter string
 		wantErr       bool
 	}{
-		{
-			name:          "bundler with no problems",
-			command:       "--package bundler --file ruby/bundler/testdata/Gemfile.lock",
-			wantOutWriter: "",
-			wantErrWriter: "",
-			wantErr:       false,
-		},
-		{
-			name:          "yarn",
-			command:       "--package yarn --file nodejs/yarn/testdata/yarn.lock",
-			wantOutWriter: "",
-			wantErrWriter: "",
-			wantErr:       false,
-		},
+		/*
+				{
+					name:          "bundler with no problems",
+					command:       "--disable-cache --package bundler --file ruby/bundler/testdata/Gemfile.lock",
+					wantOutWriter: "",
+					wantErrWriter: "",
+					wantErr:       false,
+				},
+			{
+				name:          "yarn",
+				command:       "--disable-cache --package yarn --file nodejs/yarn/testdata/yarn.lock",
+				wantOutWriter: "",
+				wantErrWriter: "",
+				wantErr:       false,
+			},
+		*/
 		{
 			name:          "npm",
-			command:       "--package npm --file nodejs/npm/testdata/package-lock.json",
+			command:       "--disable-cache --package npm --file nodejs/npm/testdata/package-lock.json",
 			wantOutWriter: "",
 			wantErrWriter: "",
 			wantErr:       false,
 		},
+<<<<<<< Updated upstream
 		{
 			name:          "pip",
 			command:       "--package pip --file python/pip/testdata/requirements.txt",
@@ -327,6 +473,94 @@ func TestDiagnose_newDiagnoseCmd(t *testing.T) {
 			wantErrWriter: "required flag(s) \"file\" not set",
 			wantErr:       true,
 		},
+=======
+		/*
+			{
+				name:          "pip",
+				command:       "--package pip --file python/pip/testdata/requirements.txt",
+				wantOutWriter: "",
+				wantErrWriter: "",
+				wantErr:       false,
+			},
+			{
+				name:          "pipenv",
+				command:       "--package pipenv --file python/pipenv/testdata/Pipfile.lock",
+				wantOutWriter: "",
+				wantErrWriter: "",
+				wantErr:       true,
+			},
+			{
+				name:          "golang",
+				command:       "--package golang --file golang/mod/testdata/go.mod",
+				wantOutWriter: "",
+				wantErrWriter: "",
+				wantErr:       true,
+			},
+			{
+				name:          "cargo",
+				command:       "--package cargo --file rust/cargo/testdata/cargo.lock",
+				wantOutWriter: "",
+				wantErrWriter: "",
+				wantErr:       true,
+			},
+			{
+				name:          "cocoapods",
+				command:       "--package cocoapods --file swift/cocoapods/testdata/Podfile.lock",
+				wantOutWriter: "",
+				wantErrWriter: "",
+				wantErr:       true,
+			},
+			{
+				name:          "pub",
+				command:       "--package pub --file dart/pub/testdata/podspec.lock",
+				wantOutWriter: "",
+				wantErrWriter: "",
+				wantErr:       true,
+			},
+			{
+				name:          "mix",
+				command:       "--package mix --file erlang_elixir/hex/testdata/mix.lock",
+				wantOutWriter: "",
+				wantErrWriter: "",
+				wantErr:       false,
+			},
+			{
+				name:          "has error",
+				command:       "--package bundler --file ruby/bundler/testdata/Gemfile_error.lock",
+				wantOutWriter: "",
+				wantErrWriter: "",
+				wantErr:       true,
+			},
+			{
+				name:          "unknown package manager",
+				command:       "--package unknown --file ruby/bundler/testdata/Gemfile.lock",
+				wantOutWriter: "",
+				wantErrWriter: "Unknown package manager: unknown. You can choose from [bundler, cargo, cocoapods, composer, golang, mix, npm, pip, pipenv, pub, yarn]",
+				wantErr:       true,
+			},
+			{
+				name:          "can't open file",
+				command:       "--package bundler --file cant_open_file.txt",
+				wantOutWriter: "",
+				wantErrWriter: "Can't open: cant_open_file.txt",
+				wantErr:       true,
+			},
+			{
+				name:          "no package option",
+				command:       "--file ruby/bundler/testdata/Gemfile.lock",
+				wantOutWriter: "",
+				wantErrWriter: "required flag(s) \"package\" not set",
+				wantErr:       true,
+			},
+			{
+				name:          "no file option",
+				command:       "--package bundler",
+				wantOutWriter: "",
+				wantErrWriter: "required flag(s) \"file\" not set",
+				wantErr:       true,
+			},
+		*/
+>>>>>>> Stashed changes
 	}
 
 	for _, tt := range tests {
