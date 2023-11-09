@@ -44,7 +44,7 @@ func (p *Pypi) fetchURLFromRegistry(client http.Client) (string, error) {
 	var PypiRegistryResponse PypiRegistryResponse
 	err = json.Unmarshal(body, &PypiRegistryResponse)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	if PypiRegistryResponse.Info.ProjectUrls.SourceCode != "" {

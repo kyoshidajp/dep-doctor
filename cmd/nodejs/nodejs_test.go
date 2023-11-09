@@ -21,11 +21,24 @@ func TestNodejs_fetchURLFromRegistry(t *testing.T) {
 		}
 		`)),
 	)
+	httpmock.RegisterResponder("GET", "https://registry.npmjs.org/not-found",
+		httpmock.NewStringResponder(404, heredoc.Doc(`
+		{}
+		`)),
+	)
+	httpmock.RegisterResponder("GET", "https://registry.npmjs.org/unmarshal-error",
+		httpmock.NewStringResponder(200, heredoc.Doc(`
+		{
+			"unmarshal": "xxx",
+		}
+		`)),
+	)
 
 	tests := []struct {
 		name    string
 		lib     types.Library
 		wantURL string
+		wantErr bool
 	}{
 		{
 			name: "source_code_uri exists",
@@ -33,6 +46,32 @@ func TestNodejs_fetchURLFromRegistry(t *testing.T) {
 				Name: "react",
 			},
 			wantURL: "git+https://github.com/facebook/react.git",
+			wantErr: false,
+		},
+		{
+			name: "404 not found",
+			lib: types.Library{
+				Name: "not-found",
+			},
+			wantURL: "",
+			wantErr: true,
+		},
+		{
+			// have no mock
+			name: "request error",
+			lib: types.Library{
+				Name: "request-error",
+			},
+			wantURL: "",
+			wantErr: true,
+		},
+		{
+			name: "Unmarshal error",
+			lib: types.Library{
+				Name: "unmarshal-error",
+			},
+			wantURL: "",
+			wantErr: true,
 		},
 	}
 

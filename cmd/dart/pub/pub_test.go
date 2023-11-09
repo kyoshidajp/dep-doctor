@@ -2,7 +2,6 @@ package dart
 
 import (
 	"net/http"
-	"strings"
 	"testing"
 
 	"github.com/MakeNowJust/heredoc"
@@ -51,6 +50,13 @@ func TestPub_fetchURLFromRegistry(t *testing.T) {
 		{}
 		`)),
 	)
+	httpmock.RegisterResponder("GET", "https://pub.dev/api/packages/unmarshal-error",
+		httpmock.NewStringResponder(200, heredoc.Doc(`
+		{
+			"unmarshal": "xxx",
+		}
+		`)),
+	)
 
 	tests := []struct {
 		name    string
@@ -90,6 +96,23 @@ func TestPub_fetchURLFromRegistry(t *testing.T) {
 			wantURL: "",
 			wantErr: true,
 		},
+		{
+			// have no mock
+			name: "request error",
+			lib: types.Library{
+				Name: "request-error",
+			},
+			wantURL: "",
+			wantErr: true,
+		},
+		{
+			name: "Unmarshal error",
+			lib: types.Library{
+				Name: "unmarshal-error",
+			},
+			wantURL: "",
+			wantErr: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -101,7 +124,7 @@ func TestPub_fetchURLFromRegistry(t *testing.T) {
 				return
 			}
 			expect := tt.wantURL
-			if !strings.HasPrefix(got, expect) {
+			if got != expect {
 				t.Errorf("get() = %v, want starts %v", got, expect)
 			}
 		})

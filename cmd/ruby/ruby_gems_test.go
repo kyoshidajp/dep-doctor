@@ -40,6 +40,13 @@ func TestRubyGems_fetchURLFromRegistry(t *testing.T) {
 		{}
 		`)),
 	)
+	httpmock.RegisterResponder("GET", "https://rubygems.org/api/v1/gems/unmarshal-error.json",
+		httpmock.NewStringResponder(200, heredoc.Doc(`
+		{
+			"unmarshal": "xxx",
+		}
+		`)),
+	)
 
 	tests := []struct {
 		name    string
@@ -75,6 +82,12 @@ func TestRubyGems_fetchURLFromRegistry(t *testing.T) {
 			// have no mock
 			name:    "request error",
 			libName: "request-error",
+			wantURL: "",
+			wantErr: true,
+		},
+		{
+			name:    "Unmarshal error",
+			libName: "unmarshal-error",
 			wantURL: "",
 			wantErr: true,
 		},

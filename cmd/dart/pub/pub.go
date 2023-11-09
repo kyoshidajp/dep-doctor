@@ -46,7 +46,7 @@ func (n *Pub) fetchURLFromRegistry(client http.Client) (string, error) {
 	var PubRegistryResponse PubRegistryResponse
 	err = json.Unmarshal(body, &PubRegistryResponse)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	if PubRegistryResponse.Latest.Pubspec.Repository != "" {

@@ -43,7 +43,7 @@ func (p *Packagist) fetchURLFromRegistry(client http.Client) (string, error) {
 	var registryResponse PackagistRegistryResponse
 	err = json.Unmarshal(body, &registryResponse)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	return registryResponse.Packages[p.lib.Name][0].Source.URL, nil
