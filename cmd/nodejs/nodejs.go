@@ -25,14 +25,9 @@ type Nodejs struct {
 
 func (n *Nodejs) fetchURLFromRegistry(client http.Client) (string, error) {
 	url := fmt.Sprintf(NODEJS_REGISTRY_API, n.lib.Name)
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	resp, err := http.Get(url)
 	if err != nil {
 		return "", err
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", nil
 	}
 
 	defer resp.Body.Close()

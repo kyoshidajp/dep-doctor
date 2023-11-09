@@ -22,12 +22,7 @@ type Crate struct {
 
 func (c *Crate) fetchURLFromRegistry(client http.Client) (string, error) {
 	url := fmt.Sprintf(CRATES_REGISTRY_API, c.name)
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return "", err
-	}
-
-	resp, err := client.Do(req)
+	resp, err := http.Get(url)
 	if err != nil {
 		return "", err
 	}
