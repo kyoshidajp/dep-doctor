@@ -20,7 +20,7 @@ func TestDiagnose(t *testing.T) {
 			Archived:  false,
 			Ignored:   false,
 			Diagnosed: true,
-			IsActive:  true,
+			Active:    true,
 		},
 		"concurrent-ruby": {
 			Name:      "concurrent-ruby",
@@ -28,7 +28,7 @@ func TestDiagnose(t *testing.T) {
 			Archived:  false,
 			Ignored:   false,
 			Diagnosed: true,
-			IsActive:  true,
+			Active:    true,
 		},
 		"i18n": {
 			Name:      "i18n",
@@ -36,7 +36,7 @@ func TestDiagnose(t *testing.T) {
 			Archived:  false,
 			Ignored:   true,
 			Diagnosed: true,
-			IsActive:  true,
+			Active:    true,
 		},
 		"method_source": {
 			Name:      "method_source",
@@ -44,7 +44,7 @@ func TestDiagnose(t *testing.T) {
 			Archived:  false,
 			Ignored:   false,
 			Diagnosed: true,
-			IsActive:  true,
+			Active:    true,
 		},
 		"dotenv": {
 			Name:      "dotenv",
@@ -52,7 +52,7 @@ func TestDiagnose(t *testing.T) {
 			Archived:  false,
 			Ignored:   false,
 			Diagnosed: true,
-			IsActive:  true,
+			Active:    true,
 		},
 	}
 
@@ -62,9 +62,12 @@ func TestDiagnose(t *testing.T) {
 		defer f.Close()
 
 		doctor := ruby.NewBundlerDoctor()
-		ignores := []string{"i18n"}
 		cache := map[string]string{}
-		diagnoses := Diagnose(doctor, f, 2, ignores, cache, false)
+		o := DiagnoseOption{
+			ignores: "i18n",
+			year:    5,
+		}
+		diagnoses := Diagnose(doctor, f, cache, o)
 		assert.Equal(t, expect, diagnoses)
 	})
 }
@@ -336,7 +339,7 @@ func TestDiagnose_newDiagnoseCmd(t *testing.T) {
 				ErrOut: errWriter,
 			}
 
-			cmd := newDiagnoseCmd(o)
+			cmd := newDiagnoseCmd(*o)
 			if tt.command != "" {
 				cmd.SetArgs(strings.Split(tt.command, " "))
 			}

@@ -3,7 +3,7 @@ package ruby
 import (
 	"net/http"
 
-	parser_io "github.com/aquasecurity/go-dep-parser/pkg/io"
+	"github.com/aquasecurity/go-dep-parser/pkg/io"
 	"github.com/aquasecurity/go-dep-parser/pkg/ruby/bundler"
 	"github.com/aquasecurity/go-dep-parser/pkg/types"
 )
@@ -17,10 +17,10 @@ func NewBundlerDoctor() *BundlerDoctor {
 	return &BundlerDoctor{HTTPClient: *client}
 }
 
-func (d *BundlerDoctor) Libraries(r parser_io.ReadSeekerAt) []types.Library {
+func (d *BundlerDoctor) Parse(r io.ReadSeekerAt) (types.Libraries, error) {
 	p := &bundler.Parser{}
-	libs, _, _ := p.Parse(r)
-	return libs
+	libs, _, err := p.Parse(r)
+	return libs, err
 }
 
 func (d *BundlerDoctor) SourceCodeURL(lib types.Library) (string, error) {

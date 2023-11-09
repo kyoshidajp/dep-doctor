@@ -17,10 +17,10 @@ func NewYarnDoctor() *YarnDoctor {
 	return &YarnDoctor{HTTPClient: *client}
 }
 
-func (d *YarnDoctor) Libraries(r parser_io.ReadSeekerAt) []types.Library {
+func (d *YarnDoctor) Parse(r parser_io.ReadSeekerAt) (types.Libraries, error) {
 	p := yarn.NewParser()
-	libs, _, _ := p.Parse(r)
-	return libs
+	libs, _, err := p.Parse(r)
+	return libs, err
 }
 
 func (d *YarnDoctor) SourceCodeURL(lib types.Library) (string, error) {

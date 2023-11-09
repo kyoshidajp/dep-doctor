@@ -17,10 +17,10 @@ func NewPipenvDoctor() *PipenvDoctor {
 	return &PipenvDoctor{HTTPClient: *client}
 }
 
-func (d *PipenvDoctor) Libraries(r parser_io.ReadSeekerAt) []types.Library {
+func (d *PipenvDoctor) Parse(r parser_io.ReadSeekerAt) (types.Libraries, error) {
 	p := pipenv.NewParser()
-	libs, _, _ := p.Parse(r)
-	return libs
+	libs, _, err := p.Parse(r)
+	return libs, err
 }
 
 func (d *PipenvDoctor) SourceCodeURL(lib types.Library) (string, error) {

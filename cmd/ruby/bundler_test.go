@@ -10,7 +10,7 @@ func TestBundlerDoctor_Libraries(t *testing.T) {
 	t.Run("read bundler lock file", func(t *testing.T) {
 		d := NewBundlerDoctor()
 		f, _ := os.Open("bundler/testdata/Gemfile.lock")
-		libs := d.Libraries(f)
+		libs, _ := d.Parse(f)
 		var libNames []string
 		for _, v := range libs {
 			libNames = append(libNames, v.Name)
