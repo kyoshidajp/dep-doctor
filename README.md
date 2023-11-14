@@ -1,4 +1,4 @@
-# dep-doctor [![Coverage Status](https://coveralls.io/repos/github/kyoshidajp/dep-doctor/badge.svg?branch=main)](https://coveralls.io/github/kyoshidajp/dep-doctor?branch=main) [![Go Reference](https://pkg.go.dev/badge/github.com/kyoshidajp/dep-doctor.svg)](https://pkg.go.dev/github.com/kyoshidajp/dep-doctor)
+# dep-doctor [![Coverage Status](https://coveralls.io/repos/github/kyoshidajp/dep-doctor/badge.svg?branch=main&kill_cache=1)](https://coveralls.io/github/kyoshidajp/dep-doctor?branch=main) [![Go Reference](https://pkg.go.dev/badge/github.com/kyoshidajp/dep-doctor.svg)](https://pkg.go.dev/github.com/kyoshidajp/dep-doctor)
 
 `dep-doctor` is a tool to diagnose whether your software dependency libraries are maintained.
 
