@@ -24,12 +24,7 @@ type Hex struct {
 
 func (g *Hex) fetchURLFromRegistry(client http.Client) (string, error) {
 	url := fmt.Sprintf(HEX_REGISTRY_API, g.name)
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return "", err
-	}
-
-	resp, err := client.Do(req)
+	resp, err := http.Get(url)
 	if err != nil {
 		return "", err
 	}

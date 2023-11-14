@@ -45,8 +45,8 @@ type FetchRepositoryParam struct {
 	Error       error
 }
 
-func (n FetchRepositoryParam) QueryWord() string {
-	return fmt.Sprintf("repo:%s/%s", n.Owner, n.Repo)
+func (p FetchRepositoryParam) QueryWord() string {
+	return fmt.Sprintf("repo:%s/%s", p.Owner, p.Repo)
 }
 
 func (p FetchRepositoryParam) RepoOwner() string {

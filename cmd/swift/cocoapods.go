@@ -67,12 +67,7 @@ func (c *CocoaPod) PodspecPath() string {
 
 func (c *CocoaPod) fetchURLFromRegistry(client http.Client) (string, error) {
 	url := fmt.Sprintf(COCOA_PODS_REGISTRY_API, c.PodspecPath())
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return "", err
-	}
-
-	resp, err := client.Do(req)
+	resp, err := http.Get(url)
 	if err != nil {
 		return "", err
 	}

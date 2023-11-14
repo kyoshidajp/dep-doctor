@@ -27,12 +27,7 @@ type Packagist struct {
 
 func (p *Packagist) fetchURLFromRegistry(client http.Client) (string, error) {
 	url := fmt.Sprintf(PACKAGIST_REGISTRY_API, p.lib.Name)
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return "", err
-	}
-
-	resp, err := client.Do(req)
+	resp, err := http.Get(url)
 	if err != nil {
 		return "", err
 	}
@@ -48,7 +43,7 @@ func (p *Packagist) fetchURLFromRegistry(client http.Client) (string, error) {
 	var registryResponse PackagistRegistryResponse
 	err = json.Unmarshal(body, &registryResponse)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	return registryResponse.Packages[p.lib.Name][0].Source.URL, nil

@@ -30,14 +30,9 @@ type Pub struct {
 
 func (n *Pub) fetchURLFromRegistry(client http.Client) (string, error) {
 	url := fmt.Sprintf(PUB_REGISTRY_API, n.lib.Name)
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	resp, err := http.Get(url)
 	if err != nil {
 		return "", err
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", nil
 	}
 
 	defer resp.Body.Close()
@@ -51,7 +46,7 @@ func (n *Pub) fetchURLFromRegistry(client http.Client) (string, error) {
 	var PubRegistryResponse PubRegistryResponse
 	err = json.Unmarshal(body, &PubRegistryResponse)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	if PubRegistryResponse.Latest.Pubspec.Repository != "" {
