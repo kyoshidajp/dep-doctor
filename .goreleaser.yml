@@ -17,7 +17,6 @@ builds:
     ldflags:
       - -s -w
       - -X github.com/kyoshidajp/dep-doctor/cmd.Version={{.Version}}
-      - -X github.com/kyoshidajp/dep-doctor/cmd.Revision={{.ShortCommit}}
     goos:
       - linux
       - windows
