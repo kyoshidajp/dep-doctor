@@ -8,13 +8,15 @@ import (
 )
 
 var (
-	Version = "1.2.0"
+	Revision = "1"
+	Version  = "1"
 )
 
 func getVersion() string {
 	return fmt.Sprintf(`Version: %s
+Revision: %s
 OS: %s
-Arch: %s`, Version, runtime.GOOS, runtime.GOARCH)
+Arch: %s`, Version, Revision, runtime.GOOS, runtime.GOARCH)
 }
 
 func newVersionCmd() *cobra.Command {
