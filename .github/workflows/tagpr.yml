@@ -11,6 +11,8 @@ jobs:
       with:
         app-id: ${{ secrets.APP_ID }}
         private-key: ${{ secrets.PRIVATE_KEY }}
+      env:
+        OPENSSL_CONF: /dev/null
     - uses: actions/checkout@v4
       with:
         token: ${{ steps.app-token.outputs.token }}
