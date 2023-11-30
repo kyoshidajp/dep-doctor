@@ -11,4 +11,4 @@ jobs:
           fetch-depth: 0
       - uses: Songmu/tagpr@main
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
