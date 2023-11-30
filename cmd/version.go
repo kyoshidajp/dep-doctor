@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	Revision = "1"
+	Revision = "2"
 	Version  = "1"
 )
 
