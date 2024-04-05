@@ -17,6 +17,10 @@ const QUERY_SEPARATOR = " "
 const SEARCH_REPOS_PER_ONCE = 20
 const TOKEN_NAME = "GITHUB_TOKEN"
 
+// To find forked repositories by search
+// https://docs.github.com/en/search-github/searching-on-github/searching-in-forks
+const FORK_QUERY = "fork:true"
+
 type GitHubRepository struct {
 	Name            string
 	Owner           string
@@ -156,7 +160,7 @@ func FetchFromGitHub(params []FetchRepositoryParam) []GitHubRepository {
 	for i, param := range params {
 		names[i] = param.QueryWord()
 	}
-	q := strings.Join(names, QUERY_SEPARATOR)
+	q := strings.Join(names, QUERY_SEPARATOR) + " " + FORK_QUERY
 	variables := map[string]interface{}{
 		"query": githubv4.String(q),
 		"count": githubv4.Int(len(names)),
