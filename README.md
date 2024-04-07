@@ -132,7 +132,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: kyoshidajp/dep-doctor@v1
         with:
-          version: v1.0.0 # or latest
+          version: v1.3.0 # or latest
       - run: dep-doctor diagnose --package golang --file go.mod
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
